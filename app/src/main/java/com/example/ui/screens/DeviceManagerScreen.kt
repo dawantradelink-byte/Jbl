@@ -434,7 +434,6 @@ fun DeviceManagerScreen(
                 onClick = {
                     haptics.click()
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        val context = androidx.compose.ui.platform.LocalContext.current
                         val required = arrayOf(
                             Manifest.permission.BLUETOOTH_CONNECT,
                             Manifest.permission.BLUETOOTH_SCAN
