@@ -116,10 +116,18 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
 
     fun toggleMute() {
         val current = _audioOutputState.value
-        val nextVolume = if (current.isMuted) lastNonMutedVolumePercent.coerceIn(1, 100) else {
+        val requestedVolume = if (current.isMuted) {
+            lastNonMutedVolumePercent.coerceIn(1, 100)
+        } else {
             lastNonMutedVolumePercent = current.volumePercent.coerceAtLeast(1)
             0
         }
+        val nextVolume = if (_settingsState.value.volumeLimiterEnabled) {
+            requestedVolume.coerceAtMost(_settingsState.value.maxSafeVolumePercent)
+        } else {
+            requestedVolume
+        }
+        if (nextVolume > 0) lastNonMutedVolumePercent = nextVolume
         val maxSteps = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
         val targetStep = ((nextVolume / 100f) * maxSteps).toInt().coerceIn(0, maxSteps)
         audioHelper.setStreamMusicVolume(targetStep)
