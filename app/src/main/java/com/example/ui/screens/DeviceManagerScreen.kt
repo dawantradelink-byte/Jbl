@@ -1,6 +1,8 @@
 package com.example.ui.screens
 
 import android.Manifest
+import android.content.Intent
+import android.provider.Settings
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -254,7 +256,7 @@ fun DeviceManagerScreen(
                     Button(
                         onClick = {
                             haptics.snap()
-                            viewModel.reconnectSpeaker()
+                            viewModel.refreshPairedDevices()
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -272,13 +274,13 @@ fun DeviceManagerScreen(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Reconnect", fontWeight = FontWeight.Bold)
+                        Text("Refresh status", fontWeight = FontWeight.Bold)
                     }
 
                     OutlinedButton(
                         onClick = {
                             haptics.snap()
-                            viewModel.toggleConnection()
+                            context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -298,7 +300,7 @@ fun DeviceManagerScreen(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = if (speakerState.connectionStatus == ConnectionStatus.CONNECTED) "Disconnect" else "Connect",
+                            text = "Bluetooth settings",
                             fontWeight = FontWeight.SemiBold
                         )
                     }
