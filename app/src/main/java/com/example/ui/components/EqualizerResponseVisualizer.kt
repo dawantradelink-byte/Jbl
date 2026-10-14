@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
@@ -40,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.OutlineVariantColor
-import com.example.ui.theme.SurfaceContainerLowest
 import kotlin.math.sin
 
 /**
@@ -69,6 +69,7 @@ fun EqualizerResponseVisualizer(
     val primary = MaterialTheme.colorScheme.primary
     val secondary = MaterialTheme.colorScheme.secondary
     val surface = MaterialTheme.colorScheme.surface
+    val curveColor = MaterialTheme.colorScheme.onSurface
     val outline = OutlineVariantColor.copy(alpha = 0.48f)
 
     GlassCard(
@@ -92,7 +93,7 @@ fun EqualizerResponseVisualizer(
                         tint = primary,
                         modifier = Modifier.height(18.dp)
                     )
-                    Spacer(modifier = Modifier.height(0.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "EQ RESPONSE VISUALIZER",
                         style = MaterialTheme.typography.labelSmall.copy(
@@ -185,7 +186,7 @@ fun EqualizerResponseVisualizer(
                     }
                     drawPath(
                         path = response,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = curveColor,
                         style = Stroke(width = 2.dp.toPx())
                     )
                     safeGains.forEachIndexed { index, gain ->
@@ -193,7 +194,7 @@ fun EqualizerResponseVisualizer(
                         val normalized = (gain + 12f) / 24f
                         val y = h * 0.78f - normalized * h * 0.48f
                         drawCircle(
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = curveColor,
                             radius = 3.dp.toPx(),
                             center = Offset(x, y)
                         )
