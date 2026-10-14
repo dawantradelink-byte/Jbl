@@ -525,7 +525,7 @@ fun DeviceManagerScreen(
                 }
                 .testTag("pairing_guide_toggle")
                 .semantics {
-                    contentDescription = "BOOMBOX4MINI Pairing Instructions, ${if (showPairingGuide) "Expanded" else "Collapsed"}"
+                    contentDescription = "Bluetooth Pairing Instructions, ${if (showPairingGuide) "Expanded" else "Collapsed"}"
                 },
             surfaceAlpha = 0.50f
         ) {
@@ -544,7 +544,7 @@ fun DeviceManagerScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "BOOMBOX4MINI Pairing Instructions",
+                            text = "Bluetooth Pairing Instructions",
                             style = MaterialTheme.typography.titleMedium.copy(fontSize = 13.sp),
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -564,11 +564,11 @@ fun DeviceManagerScreen(
                         modifier = Modifier.padding(top = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        PairingStepItem("1", "Hold Power button for 2 seconds until acoustic chime sounds.")
-                        PairingStepItem("2", "Observe the front LED indicator flashing blue rapidly (Pairing Mode).")
-                        PairingStepItem("3", "If paired with another phone, hold Play/Pause button for 3 seconds to unbind.")
-                        PairingStepItem("4", "Open Android Settings > Connected Devices > Pair new device.")
-                        PairingStepItem("5", "Tap 'BOOMBOX4MINI' to link. Return to this studio for audio management.")
+                        PairingStepItem("1", "Power on your speaker.")
+                        PairingStepItem("2", "Use the speaker's documented Bluetooth or pairing control to enter pairing mode.")
+                        PairingStepItem("3", "On your phone, open Android Settings > Bluetooth.")
+                        PairingStepItem("4", "Select the speaker name shown by Android and complete pairing.")
+                        PairingStepItem("5", "Return here and tap Refresh paired to update the device list.")
                     }
                 }
             }
