@@ -7,6 +7,15 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberSaveable
+import androidx.compose.ui.graphics.StrokeCap
+import kotlin.math.sin
+import kotlin.math.cos
+import kotlin.math.abs
+import kotlin.math.PI
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -67,6 +76,7 @@ fun AcousticSpeakerVisualizer(
     audioEffectAvailable: Boolean,
     modifier: Modifier = Modifier
 ) {
+    var animationStyle by rememberSaveable { mutableIntStateOf(0) }
     val themePrimary = MaterialTheme.colorScheme.primary
     val themeSecondary = MaterialTheme.colorScheme.secondary
     val themeTertiary = MaterialTheme.colorScheme.tertiary
@@ -196,13 +206,17 @@ fun AcousticSpeakerVisualizer(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(144.dp),
+                    .height(164.dp)
+                    .pointerInput(animationStyle) {
+                        var dragTotal = 0f
+                        detectHorizontalDragGestures(onHorizontalDrag = { _, amount -> dragTotal += amount }, onDragEnd = { if (dragTotal < -40f) animationStyle = (animationStyle + 1) % 5; if (dragTotal > 40f) animationStyle = (animationStyle - 1 + 5) % 5; dragTotal = 0f }, onDragCancel = { dragTotal = 0f })
+                    }.testTag("speaker_animation_swipe"),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(144.dp)
+                        .height(164.dp)
                 ) {
                     val w = size.width
                     val h = size.height
@@ -387,6 +401,40 @@ fun AcousticSpeakerVisualizer(
                         center = Offset(rightWooferX, cy)
                     )
 
+
+                    // Five selectable ambient motion layers. Visual effects only, not audio telemetry.
+                    val motionColors = listOf(themePrimary, themeSecondary, themeTertiary)
+                    when (animationStyle) {
+                        0 -> for (i in 0..2) {
+                            val radius = (36f + i * 15f + 8f * sin(waveOffset1 * 6f + i)).dp.toPx()
+                            drawCircle(motionColors[i].copy(alpha = 0.30f - i * 0.06f), radius, Offset(cx, cy), style = Stroke(width = 2.dp.toPx()))
+                        }
+                        1 -> for (i in 0 until 12) {
+                            val angle = (i * (2f * PI.toFloat() / 12f)) + waveOffset1 * 2f
+                            val radius = 55.dp.toPx() + 10.dp.toPx() * sin(waveOffset2 * 5f + i)
+                            drawCircle(motionColors[i % 3].copy(alpha = 0.9f), 2.2.dp.toPx(), Offset(cx + cos(angle) * radius, cy + sin(angle) * radius * 0.58f))
+                        }
+                        2 -> for (i in 0 until 25) {
+                            val x = cx - 112.dp.toPx() + i * 9.dp.toPx()
+                            val barH = (8f + 20f * abs(sin(i * 0.47f + waveOffset1 * 5f))).dp.toPx()
+                            drawRoundRect(motionColors[i % 3].copy(alpha = 0.68f), Offset(x, cy + 48.dp.toPx() - barH / 2f), Size(3.dp.toPx(), barH), CornerRadius(2.dp.toPx()))
+                        }
+                        3 -> {
+                            val scanX = w * ((waveOffset1 + 0.3f) % 1f)
+                            drawLine(themePrimary.copy(alpha = 0.65f), Offset(scanX, cy - 56.dp.toPx()), Offset(scanX, cy + 56.dp.toPx()), 2.dp.toPx())
+                            drawCircle(themeSecondary.copy(alpha = 0.18f), 42.dp.toPx(), Offset(cx + sin(waveOffset2 * 4f) * 62.dp.toPx(), cy), style = Stroke(width = 4.dp.toPx()))
+                        }
+                        4 -> repeat(3) { layer ->
+                            val path = Path()
+                            for (i in 0..48) {
+                                val x = w * i / 48f
+                                val y = cy + (layer - 1) * 23.dp.toPx() + sin(i * 0.20f + waveOffset1 * 5f + layer) * 9.dp.toPx()
+                                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                            }
+                            drawPath(path, motionColors[layer].copy(alpha = 0.7f), style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+                        }
+                    }
+
                     // 7. Passive End Radiator Anodized Gradient Rings (Left & Right)
                     val ringBrush = Brush.linearGradient(
                         colors = listOf(
@@ -410,6 +458,26 @@ fun AcousticSpeakerVisualizer(
                     )
                 }
             }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 1.dp, bottom = 3.dp)
+            ) {
+                listOf("SONIC", "ORBIT", "FUNKY", "NEON", "AURORA").forEachIndexed { index, label ->
+                    Box(
+                        modifier = Modifier.clip(RoundedCornerShape(10.dp))
+                            .background(if (animationStyle == index) themePrimary.copy(alpha = 0.18f) else Color.Transparent)
+                            .border(1.dp, if (animationStyle == index) themePrimary else Color.Transparent, RoundedCornerShape(10.dp))
+                            .padding(horizontal = 5.dp, vertical = 4.dp)
+                    ) {
+                        Text(label, style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold),
+                            color = if (animationStyle == index) themePrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+            Text("SWIPE SPEAKER TO CHANGE ANIMATION", style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
+                color = themePrimary, modifier = Modifier.padding(bottom = 8.dp))
 
             // Live Transducer Pulse Meter Rings (3 dots: Mint, Orange, Rose)
             Row(
