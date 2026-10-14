@@ -58,7 +58,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         )
     )
     val audioOutputState: StateFlow<AudioOutputState> = _audioOutputState.asStateFlow()
-    private var lastNonMutedVolumePercent: Int = _mediaState.value.volumePercent.coerceAtLeast(1)
+    private var lastNonMutedVolumePercent: Int = _audioOutputState.value.volumePercent.coerceAtLeast(1)
 
     private val _equalizerState = MutableStateFlow(StudioEqualizerState())
     val equalizerState: StateFlow<StudioEqualizerState> = _equalizerState.asStateFlow()
