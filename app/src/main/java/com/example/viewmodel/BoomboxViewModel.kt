@@ -52,11 +52,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     )
     val speakerState: StateFlow<SpeakerDevice> = _speakerState.asStateFlow()
 
-    private val _audioOutputState = MutableStateFlow(
-        AudioOutputState(
-            volumePercent = calculateInitialVolumePercent(),
-        )
-    )
+    private val _audioOutputState = MutableStateFlow(createInitialAudioOutputState())
     val audioOutputState: StateFlow<AudioOutputState> = _audioOutputState.asStateFlow()
     private var lastNonMutedVolumePercent: Int = _audioOutputState.value.volumePercent.coerceAtLeast(1)
 
@@ -89,6 +85,11 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
                 _settingsState.update { it.copy(hapticFeedbackEnabled = haptics) }
             }
         }
+    }
+
+    private fun createInitialAudioOutputState(): AudioOutputState {
+        val percent = calculateInitialVolumePercent()
+        return AudioOutputState(volumePercent = percent, isMuted = percent == 0)
     }
 
     private fun calculateInitialVolumePercent(): Int {
