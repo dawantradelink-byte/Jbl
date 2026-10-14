@@ -24,12 +24,7 @@ data class SpeakerDevice(
     val bluetoothVersion: String = "Unavailable",
     val connectionStatus: ConnectionStatus = ConnectionStatus.DISCONNECTED,
     val activeCodec: String = "Unavailable",
-    val supportedInputs: List<SpeakerInput> = listOf(
-        SpeakerInput.BLUETOOTH,
-        SpeakerInput.AUX,
-        SpeakerInput.TF_CARD,
-        SpeakerInput.USB
-    ),
+    val supportedInputs: List<SpeakerInput> = listOf(SpeakerInput.BLUETOOTH),
     val currentInput: SpeakerInput = SpeakerInput.BLUETOOTH,
     val signalDbm: Int = 0
 )
