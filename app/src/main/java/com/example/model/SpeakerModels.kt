@@ -24,11 +24,6 @@ data class SpeakerDevice(
     val bluetoothVersion: String = "Unavailable",
     val connectionStatus: ConnectionStatus = ConnectionStatus.DISCONNECTED,
     val activeCodec: String = "Unavailable",
-    val ratedPlaybackHours: Int = 0,
-    val estimatedMinutesRemaining: Int = 0,
-    val isPlayingEstimator: Boolean = false,
-    val hasHardwareBatteryTelemetry: Boolean = false,
-    val telemetryNotice: String = "Hardware does not report battery telemetry via Bluetooth A2DP. Playback estimate is derived from active streaming time.",
     val supportedInputs: List<SpeakerInput> = listOf(
         SpeakerInput.BLUETOOTH,
         SpeakerInput.AUX,
@@ -40,7 +35,7 @@ data class SpeakerDevice(
 )
 
 data class AudioOutputState(
-    val volumePercent: Int = 68,
+    val volumePercent: Int = 0,
     val isMuted: Boolean = false
 )
 
