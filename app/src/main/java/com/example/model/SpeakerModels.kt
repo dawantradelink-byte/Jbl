@@ -26,7 +26,6 @@ data class SpeakerDevice(
     val activeCodec: String = "Unavailable",
     val supportedInputs: List<SpeakerInput> = listOf(SpeakerInput.BLUETOOTH),
     val currentInput: SpeakerInput = SpeakerInput.BLUETOOTH,
-    val signalDbm: Int = 0
 )
 
 data class AudioOutputState(
@@ -59,7 +58,4 @@ data class StudioEqualizerState(
     ),
     val bassLevel: Float = 0.5f, // 0..1 master bass
     val trebleLevel: Float = 0.5f, // 0..1 master treble
-    val bassBoostAmount: Float = 0.40f, // 0..1
-    val virtualizerAmount: Float = 0.25f, // 0..1
-    val isDspSimulationNoteVisible: Boolean = true
 )
