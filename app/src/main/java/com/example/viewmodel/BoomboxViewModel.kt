@@ -139,21 +139,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         _mediaState.update { it.copy(isMuted = nextVolume == 0, volumePercent = nextVolume) }
     }
 
-    // Connection Controls
-    fun toggleConnection() {
-        showToastMessage(
-            "Use Android Bluetooth settings to connect or disconnect your speaker. " +
-                "This app will not report a connection until the operating system confirms it."
-        )
-    }
-
-    fun reconnectSpeaker() {
-        refreshPairedDevices()
-        showToastMessage(
-            "Paired-device list refreshed. If your speaker is not connected, open Android Bluetooth settings and connect it there."
-        )
-    }
-
+    // Connection state is refreshed from Android's real A2DP profile state in refreshPairedDevices().
     fun selectSpeakerInput(input: SpeakerInput) {
         showToastMessage(
             "${input.title} cannot be switched from this app. Use the speaker's physical mode button; " +
