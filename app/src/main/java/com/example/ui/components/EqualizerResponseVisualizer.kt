@@ -101,7 +101,7 @@ fun EqualizerResponseVisualizer(
                             letterSpacing = 0.7.sp,
                             fontSize = 10.sp
                         ),
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = curveColor
                     )
                 }
                 Text(
@@ -212,7 +212,7 @@ fun EqualizerResponseVisualizer(
                     Text(
                         text = label,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = curveColorVariant
                     )
                 }
             }
@@ -224,7 +224,7 @@ fun EqualizerResponseVisualizer(
                 else
                     "Phone EQ is unavailable; this remains a profile preview.",
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = curveColorVariant
             )
         }
     }
