@@ -55,7 +55,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     private val _mediaState = MutableStateFlow(
         MediaPlaybackState(
             volumePercent = calculateInitialVolumePercent(),
-            isPlaying = true
+            isPlaying = false
         )
     )
     val mediaState: StateFlow<MediaPlaybackState> = _mediaState.asStateFlow()
@@ -77,7 +77,6 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         refreshPairedDevices()
-        startPlaybackPositionTicker()
         observeStoredSettings()
         applyCurrentEqualizer()
     }
@@ -101,54 +100,17 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         return ((current.toFloat() / max.toFloat()) * 100).toInt().coerceIn(0, 100)
     }
 
-    private fun startPlaybackPositionTicker() {
-        viewModelScope.launch {
-            while (true) {
-                delay(1000)
-                if (_mediaState.value.isPlaying && _mediaState.value.isMediaSessionActive) {
-                    _mediaState.update { current ->
-                        val nextPos = (current.positionSeconds + 1) % (current.durationSeconds.coerceAtLeast(1))
-                        current.copy(positionSeconds = nextPos)
-                    }
-                }
-            }
-        }
-    }
-
-    // Media Controls
+    // Media transport is intentionally not simulated. It requires a real Android media-session controller.
     fun togglePlayPause() {
-        val newPlaying = !_mediaState.value.isPlaying
-        _mediaState.update { it.copy(isPlaying = newPlaying) }
-        audioHelper.togglePlayPause()
+        showToastMessage("Media controls are not connected. Use your music app to play or pause audio.")
     }
 
     fun skipNextTrack() {
-        _mediaState.update {
-            it.copy(
-                positionSeconds = 0,
-                trackTitle = when (it.trackTitle) {
-                    "Midnight Bassline" -> "Electric Resonance"
-                    "Electric Resonance" -> "Acoustic Radiator Pulse"
-                    else -> "Midnight Bassline"
-                },
-                artistName = when (it.artistName) {
-                    "Acoustic Horizon" -> "Studio Master 5.4"
-                    else -> "Acoustic Horizon"
-                }
-            )
-        }
-        audioHelper.skipNext()
+        showToastMessage("Track skipping requires an active Android media session.")
     }
 
     fun skipPreviousTrack() {
-        _mediaState.update {
-            it.copy(
-                positionSeconds = 0,
-                trackTitle = "Midnight Bassline",
-                artistName = "Acoustic Horizon"
-            )
-        }
-        audioHelper.skipPrevious()
+        showToastMessage("Track skipping requires an active Android media session.")
     }
 
     fun setVolume(newPercent: Int) {
