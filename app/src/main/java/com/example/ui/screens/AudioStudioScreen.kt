@@ -151,6 +151,7 @@ fun AudioStudioScreen(
                     haptics.snap()
                     viewModel.resetEqualizerFlat()
                 },
+                enabled = audioEffectAvailable,
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
@@ -402,6 +403,7 @@ fun AudioStudioScreen(
                             viewModel.updateBassLevel(it)
                         },
                         valueRange = 0f..1f,
+                        enabled = audioEffectAvailable,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("slider_master_bass")
@@ -575,6 +577,7 @@ fun AudioStudioScreen(
                                 viewModel.updateBandGain(band.bandIndex, it)
                             },
                             valueRange = -12f..12f,
+                            enabled = audioEffectAvailable,
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 6.dp)
