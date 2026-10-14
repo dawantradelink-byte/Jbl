@@ -18,14 +18,14 @@ enum class SpeakerInput(
 }
 
 data class SpeakerDevice(
-    val name: String = "BOOMBOX4MINI",
-    val modelNumber: String = "B4M-BT54-GL",
+    val name: String = "No Bluetooth audio connected",
+    val modelNumber: String = "Not available",
     val macAddress: String = "Not connected",
-    val bluetoothVersion: String = "Bluetooth 5.4 BR/EDR + BLE",
+    val bluetoothVersion: String = "Unavailable",
     val connectionStatus: ConnectionStatus = ConnectionStatus.DISCONNECTED,
-    val activeCodec: String = "AAC / SBC HD Audio",
-    val ratedPlaybackHours: Int = 5,
-    val estimatedMinutesRemaining: Int = 260,
+    val activeCodec: String = "Unavailable",
+    val ratedPlaybackHours: Int = 0,
+    val estimatedMinutesRemaining: Int = 0,
     val isPlayingEstimator: Boolean = false,
     val hasHardwareBatteryTelemetry: Boolean = false,
     val telemetryNotice: String = "Hardware does not report battery telemetry via Bluetooth A2DP. Playback estimate is derived from active streaming time.",
@@ -36,7 +36,7 @@ data class SpeakerDevice(
         SpeakerInput.USB
     ),
     val currentInput: SpeakerInput = SpeakerInput.BLUETOOTH,
-    val signalDbm: Int = -52
+    val signalDbm: Int = 0
 )
 
 data class MediaPlaybackState(
