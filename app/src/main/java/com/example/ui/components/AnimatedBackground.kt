@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -131,58 +132,59 @@ fun AnimatedBackground(
     )
 
     // Precomputed immutable gradient color stops (avoids per-frame allocations)
-    val oceanicColors = remember {
+    val oceanicColors = remember(activeTheme) {
         listOf(
-            PrimaryMint.copy(alpha = 0.38f),
-            OceanicBluePrimary.copy(alpha = 0.42f),
-            OceanicBlueDim.copy(alpha = 0.20f),
+            activeTheme.highlightColor.copy(alpha = 0.34f),
+            activeTheme.primaryColor.copy(alpha = 0.36f),
+            activeTheme.primaryColor.copy(alpha = 0.18f),
             Color.Transparent
         )
     }
-    val roastedColors = remember {
+    val roastedColors = remember(activeTheme) {
         listOf(
-            RoastedBrownPrimary.copy(alpha = 0.55f),
-            RoastedBrownDim.copy(alpha = 0.24f),
+            activeTheme.primaryColor.copy(alpha = 0.28f),
+            activeTheme.highlightColor.copy(alpha = 0.24f),
             Color.Transparent
         )
     }
-    val crimsonColors = remember {
+    val crimsonColors = remember(activeTheme) {
         listOf(
-            TertiaryCrimsonRose.copy(alpha = 0.42f),
-            CrimsonRosePrimary.copy(alpha = 0.36f),
-            CrimsonRoseDim.copy(alpha = 0.16f),
+            activeTheme.accentSecondary.copy(alpha = 0.22f),
+            activeTheme.highlightColor.copy(alpha = 0.24f),
+            activeTheme.primaryColor.copy(alpha = 0.12f),
             Color.Transparent
         )
     }
-    val sunsetColors = remember {
+    val sunsetColors = remember(activeTheme) {
         listOf(
-            SecondarySunsetOrange.copy(alpha = 0.45f),
-            SunsetOrangePrimary.copy(alpha = 0.35f),
-            SunsetOrangeDim.copy(alpha = 0.12f),
+            activeTheme.highlightColor.copy(alpha = 0.31f),
+            activeTheme.primaryColor.copy(alpha = 0.27f),
+            activeTheme.primaryColor.copy(alpha = 0.12f),
             Color.Transparent
         )
     }
-    val dreamyColors = remember {
+    val dreamyColors = remember(activeTheme) {
         listOf(
-            DreamyPinkHighlight.copy(alpha = 0.32f),
-            DreamyPinkPrimary.copy(alpha = 0.16f),
+            activeTheme.accentSecondary.copy(alpha = 0.16f),
+            activeTheme.highlightColor.copy(alpha = 0.20f),
             Color.Transparent
         )
     }
-    val heroGlowColors = remember {
+    val heroGlowColors = remember(activeTheme) {
         listOf(
-            SecondarySunsetOrange.copy(alpha = 0.35f),
-            TertiaryCrimsonRose.copy(alpha = 0.20f),
-            PrimaryContainerOceanic.copy(alpha = 0.15f),
+            activeTheme.highlightColor.copy(alpha = 0.30f),
+            activeTheme.accentSecondary.copy(alpha = 0.16f),
+            activeTheme.primaryColor.copy(alpha = 0.12f),
             Color.Transparent
         )
     }
-    val vignetteColors = remember {
+    val themedBackground = lerp(StudioBackground, activeTheme.surfaceColor, 0.34f)
+    val vignetteColors = remember(themedBackground) {
         listOf(
-            StudioBackground.copy(alpha = 0.50f),
+            themedBackground.copy(alpha = 0.50f),
             Color.Transparent,
             Color.Transparent,
-            StudioBackground.copy(alpha = 0.85f)
+            themedBackground.copy(alpha = 0.85f)
         )
     }
 
@@ -192,7 +194,7 @@ fun AnimatedBackground(
             val h = size.height
 
             // 1. Base deep obsidian studio surface
-            drawRect(color = StudioBackground)
+            drawRect(color = themedBackground)
 
             // 2. Field 1: Oceanic Blue (deep blue-green) in lower-left / mid-left
             val o1X = if (isReducedMotion) 0.24f else 0.22f + 0.07f * sin(phaseAngle.toDouble()).toFloat()
