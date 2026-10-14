@@ -83,7 +83,7 @@ fun AcousticSpeakerVisualizer(
     // Ambient floating glow intensity
     val ambientGlowIntensity by infiniteTransition.animateFloat(
         initialValue = 0.35f,
-        targetValue = if (isPlaying && connectionStatus == ConnectionStatus.CONNECTED) 0.85f else 0.20f,
+        targetValue = if (connectionStatus == ConnectionStatus.CONNECTED) 0.85f else 0.20f,
         animationSpec = infiniteRepeatable(
             animation = tween(1200, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -94,7 +94,7 @@ fun AcousticSpeakerVisualizer(
     // Waveform variation offsets for driver cones
     val waveOffset1 by infiniteTransition.animateFloat(
         initialValue = 0.20f,
-        targetValue = if (isPlaying && connectionStatus == ConnectionStatus.CONNECTED) 0.95f else 0.15f,
+        targetValue = if (connectionStatus == ConnectionStatus.CONNECTED) 0.95f else 0.15f,
         animationSpec = infiniteRepeatable(
             animation = tween(380, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -103,7 +103,7 @@ fun AcousticSpeakerVisualizer(
     )
     val waveOffset2 by infiniteTransition.animateFloat(
         initialValue = 0.85f,
-        targetValue = if (isPlaying && connectionStatus == ConnectionStatus.CONNECTED) 0.30f else 0.15f,
+        targetValue = if (connectionStatus == ConnectionStatus.CONNECTED) 0.30f else 0.15f,
         animationSpec = infiniteRepeatable(
             animation = tween(520, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
