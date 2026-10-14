@@ -447,7 +447,7 @@ fun DeviceManagerScreen(
                         }
                         if (missing.isEmpty()) {
                             permissionDeniedState = false
-                            viewModel.startDiscoveryScan()
+                            viewModel.refreshBluetoothDevices()
                         } else {
                             permissionLauncher.launch(missing.toTypedArray())
                         }
