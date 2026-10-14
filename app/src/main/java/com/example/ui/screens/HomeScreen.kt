@@ -78,6 +78,7 @@ fun HomeScreen(
     val speakerState by viewModel.speakerState.collectAsStateWithLifecycle()
     val mediaState by viewModel.mediaState.collectAsStateWithLifecycle()
     val equalizerState by viewModel.equalizerState.collectAsStateWithLifecycle()
+    val audioEffectAvailable by viewModel.audioEffectAvailable.collectAsStateWithLifecycle()
 
     Column(
         modifier = modifier
@@ -180,10 +181,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(PrimaryMint)
-                        .clickable {
-                            haptics.click()
-                        },
+                        .background(PrimaryMint),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -278,7 +276,7 @@ fun HomeScreen(
                 }
 
                 Text(
-                    text = "ANDROID SYSTEM EQ",
+                    text = if (audioEffectAvailable) "SYSTEM EQ READY" else "SYSTEM EQ UNAVAILABLE",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
@@ -306,7 +304,7 @@ fun HomeScreen(
                             if (isPreset1Selected) SecondarySunsetOrange else Color.Transparent,
                             RoundedCornerShape(8.dp)
                         )
-                        .clickable {
+                        .clickable(enabled = audioEffectAvailable) {
                             haptics.click()
                             viewModel.selectPreset(EqualizerPreset.BASS_BOOST)
                         }
@@ -331,7 +329,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Deep Sub-Bass",
+                                text = "Bass Boost",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
@@ -339,7 +337,7 @@ fun HomeScreen(
                                 color = SecondarySunsetOrange
                             )
                             Text(
-                                text = "40Hz Harmonic",
+                                text = "60–250 Hz emphasis",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -444,7 +442,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Warm Vinyl",
+                                text = "Balanced",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
@@ -452,7 +450,7 @@ fun HomeScreen(
                                 color = SecondaryFixedPeach
                             )
                             Text(
-                                text = "Tape Saturation",
+                                text = "Flat system response",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
