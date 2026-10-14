@@ -105,7 +105,7 @@ fun DeviceManagerScreen(
             ) == android.content.pm.PackageManager.PERMISSION_GRANTED
         val scanGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
             ContextCompat.checkSelfPermission(
-                androidx.compose.ui.platform.LocalContext.current,
+                context,
                 Manifest.permission.BLUETOOTH_SCAN
             ) == android.content.pm.PackageManager.PERMISSION_GRANTED
         if (connectGranted && scanGranted) {
