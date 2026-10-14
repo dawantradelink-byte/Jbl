@@ -4,6 +4,7 @@ import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -25,6 +26,20 @@ class BluetoothManagerHelper(private val context: Context) {
     fun isBluetoothSupported(): Boolean = bluetoothAdapter != null
 
     fun isBluetoothEnabled(): Boolean = bluetoothAdapter?.isEnabled == true
+
+    /** True only when Android reports an active A2DP audio profile connection. */
+    fun isA2dpConnected(): Boolean {
+        if (!hasBluetoothConnectPermission() || bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+            return false
+        }
+        return try {
+            bluetoothAdapter.getProfileConnectionState(BluetoothProfile.A2DP) == BluetoothProfile.STATE_CONNECTED
+        } catch (_: SecurityException) {
+            false
+        } catch (_: Exception) {
+            false
+        }
+    }
 
     fun hasBluetoothConnectPermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
