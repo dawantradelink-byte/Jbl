@@ -5,7 +5,7 @@ Updated: 2026-10-14
 ## Real-functionality pass
 
 ### Implemented
-- Bluetooth permission state is checked before requesting anything; already-granted permissions are not requested again.
+- Bluetooth Connect permission is checked before requesting anything; already-granted permission is not requested again. The unused nearby-scan permission was removed because this app only reads paired devices.
 - Removed fabricated fallback devices and hard-coded MAC addresses. The list uses Android's real paired-device data.
 - Connection state comes from Android's A2DP profile state. The UI does not simulate a connection after a timer.
 - Bluetooth Settings opens the real Android Bluetooth settings page. Refresh re-reads paired devices and A2DP status.
