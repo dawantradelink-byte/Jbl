@@ -357,7 +357,7 @@ fun HomeScreen(
                             if (isPreset2Selected) PrimaryMint else Color.Transparent,
                             RoundedCornerShape(8.dp)
                         )
-                        .clickable {
+                        .clickable(enabled = audioEffectAvailable) {
                             haptics.click()
                             viewModel.selectPreset(EqualizerPreset.VOCAL)
                         }
@@ -417,7 +417,7 @@ fun HomeScreen(
                             if (isPreset3Selected) RoastedBrownHighlight else Color.Transparent,
                             RoundedCornerShape(8.dp)
                         )
-                        .clickable {
+                        .clickable(enabled = audioEffectAvailable) {
                             haptics.click()
                             viewModel.selectPreset(EqualizerPreset.BALANCED)
                         }
@@ -470,7 +470,7 @@ fun HomeScreen(
                             if (isPreset4Selected) TertiaryCrimsonRose else Color.Transparent,
                             RoundedCornerShape(8.dp)
                         )
-                        .clickable {
+                        .clickable(enabled = audioEffectAvailable) {
                             haptics.click()
                             viewModel.selectPreset(EqualizerPreset.CLUB)
                         }
