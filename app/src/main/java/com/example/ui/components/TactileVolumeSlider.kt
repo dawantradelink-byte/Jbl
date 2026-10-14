@@ -68,6 +68,9 @@ fun TactileVolumeSlider(
     isMuted: Boolean,
     onVolumeChanged: (Int) -> Unit,
     onMuteToggled: () -> Unit,
+    volumeLimiterEnabled: Boolean = true,
+    onMaxOutputRequested: () -> Unit = {},
+    onSafeLimitRequested: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptics = LocalStudioHaptics.current
@@ -324,6 +327,78 @@ fun TactileVolumeSlider(
                         ),
                         color = MaterialTheme.colorScheme.tertiary
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Explicit, honest output modes: maximum Android stream volume vs the app's 85% limiter.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            if (!volumeLimiterEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                            else SurfaceContainerLowest
+                        )
+                        .border(
+                            1.dp,
+                            if (!volumeLimiterEnabled) MaterialTheme.colorScheme.primary
+                            else OutlineColor.copy(alpha = 0.4f),
+                            RoundedCornerShape(14.dp)
+                        )
+                        .clickable { onMaxOutputRequested() }
+                        .padding(horizontal = 10.dp, vertical = 10.dp)
+                        .testTag("max_output_mode")
+                ) {
+                    Column {
+                        Text(
+                            text = if (!volumeLimiterEnabled) "MAX OUTPUT ACTIVE" else "MAX OUTPUT",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Allow up to 100%",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            if (volumeLimiterEnabled) MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f)
+                            else SurfaceContainerLowest
+                        )
+                        .border(
+                            1.dp,
+                            if (volumeLimiterEnabled) MaterialTheme.colorScheme.secondary
+                            else OutlineColor.copy(alpha = 0.4f),
+                            RoundedCornerShape(14.dp)
+                        )
+                        .clickable { onSafeLimitRequested() }
+                        .padding(horizontal = 10.dp, vertical = 10.dp)
+                        .testTag("safe_volume_mode")
+                ) {
+                    Column {
+                        Text(
+                            text = if (volumeLimiterEnabled) "85% SAFE LIMIT ACTIVE" else "85% SAFE LIMIT",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp),
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Text(
+                            text = "Limit app volume to 85%",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
