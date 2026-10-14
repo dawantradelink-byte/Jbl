@@ -19,7 +19,8 @@ Updated: 2026-10-14
 ### Build and test status
 - Added GitHub Actions workflow at .github/workflows/android-build.yml to run unit tests, assemble a debug APK, and upload the APK artifact.
 - Fixed the CI Android SDK package selection after the first run identified a removed package and then an incorrect API 36.1 package identifier.
-- An earlier CI compile exposed stale startDiscoveryScan references. These references have been removed; the latest branch run must pass before this can be considered build-verified.
+- Fixed stale Bluetooth scan references and moved Robolectric tests to API 35 while keeping the app compile SDK at API 36.1.
+- Unit tests passed on the latest completed test run. APK assembly then exposed a missing root debug.keystore; the workflow now generates an ephemeral debug key in the runner instead of committing a signing key. The post-fix APK build is still pending and must pass before the app is considered build-verified.
 - No physical-device test has been performed from this environment. Real A2DP reporting, phone-side EQ availability, permission behavior, and audible volume/EQ changes still need confirmation on the target phone.
 
 ### Intentional limitations
