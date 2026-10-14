@@ -10,6 +10,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -35,42 +36,46 @@ fun BoomboxTheme(
         label = "animSecondary"
     )
 
+    // The former code animated these three skin colours but never used them in the
+    // Material color scheme. Bind surfaces and accents to the selected skin too.
+    val themedBackground = lerp(SurfaceDark, activeTheme.surfaceColor, 0.30f)
+    val themedSurface = lerp(SurfaceContainer, activeTheme.surfaceColor, 0.34f)
+    val themedSurfaceLow = lerp(SurfaceContainerLow, activeTheme.surfaceColor, 0.30f)
+    val themedSurfaceHigh = lerp(SurfaceContainerHigh, activeTheme.surfaceColor, 0.34f)
+    val themedSurfaceHighest = lerp(SurfaceContainerHighest, activeTheme.surfaceColor, 0.34f)
+
     val colorScheme = darkColorScheme(
-        // Primary: Oceanic Mint (#97D3B7) with deep container (#215C46)
-        primary = PrimaryMint,
-        onPrimary = PrimaryMintDark,
-        primaryContainer = PrimaryContainerOceanic,
-        onPrimaryContainer = PrimaryMint,
+        primary = animatedHighlight,
+        onPrimary = Color(0xFF111315),
+        primaryContainer = animatedPrimary,
+        onPrimaryContainer = TextOnSurface,
 
-        // Secondary: Sunset Orange (#FFB86C) with warm container (#D38000)
-        secondary = SecondarySunsetOrange,
-        onSecondary = Color(0xFF492900),
-        secondaryContainer = SecondarySunsetContainer,
-        onSecondaryContainer = SecondaryFixedPeach,
+        secondary = animatedSecondary,
+        onSecondary = Color(0xFF111315),
+        secondaryContainer = lerp(SurfaceContainerHigh, activeTheme.surfaceColor, 0.55f),
+        onSecondaryContainer = TextOnSurface,
 
-        // Tertiary: Crimson Rose (#FFB3B2) with rich container (#A80025)
-        tertiary = TertiaryCrimsonRose,
-        onTertiary = Color(0xFF680013),
-        tertiaryContainer = TertiaryCrimsonContainer,
-        onTertiaryContainer = Color(0xFFFFDAD6),
+        tertiary = animatedHighlight,
+        onTertiary = Color(0xFF111315),
+        tertiaryContainer = animatedPrimary,
+        onTertiaryContainer = TextOnSurface,
 
-        // Dark Obsidian Surfaces
-        background = SurfaceDark,
+        background = themedBackground,
         onBackground = TextOnSurface,
 
-        surface = SurfaceContainer,
+        surface = themedSurface,
         onSurface = TextOnSurface,
-        surfaceVariant = SurfaceContainerHigh,
+        surfaceVariant = themedSurfaceHigh,
         onSurfaceVariant = TextOnSurfaceVariant,
 
-        surfaceContainerLowest = SurfaceContainerLowest,
-        surfaceContainerLow = SurfaceContainerLow,
-        surfaceContainer = SurfaceContainer,
-        surfaceContainerHigh = SurfaceContainerHigh,
-        surfaceContainerHighest = SurfaceContainerHighest,
+        surfaceContainerLowest = lerp(SurfaceContainerLowest, activeTheme.surfaceColor, 0.14f),
+        surfaceContainerLow = themedSurfaceLow,
+        surfaceContainer = themedSurface,
+        surfaceContainerHigh = themedSurfaceHigh,
+        surfaceContainerHighest = themedSurfaceHighest,
 
-        outline = OutlineColor,
-        outlineVariant = OutlineVariantColor,
+        outline = lerp(OutlineColor, animatedHighlight, 0.16f),
+        outlineVariant = lerp(OutlineVariantColor, animatedHighlight, 0.25f),
 
         error = Color(0xFFFFB4AB),
         onError = Color(0xFF690005)
@@ -81,8 +86,8 @@ fun BoomboxTheme(
         SideEffect {
             val window = (view.context as? Activity)?.window
             if (window != null) {
-                window.statusBarColor = SurfaceDark.toArgb()
-                window.navigationBarColor = SurfaceDark.toArgb()
+                window.statusBarColor = themedBackground.toArgb()
+                window.navigationBarColor = themedBackground.toArgb()
                 val insetsController = WindowCompat.getInsetsController(window, view)
                 insetsController.isAppearanceLightStatusBars = false
                 insetsController.isAppearanceLightNavigationBars = false
