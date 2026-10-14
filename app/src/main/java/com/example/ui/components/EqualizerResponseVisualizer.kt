@@ -109,7 +109,7 @@ fun EqualizerResponseVisualizer(
                 }, Visualizer.getMaxCaptureRate() / 2, false, true)
                 visualizer.enabled = true
                 effect = visualizer
-                captureAvailable = true
+                // Wait for the first real FFT callback before displaying LIVE ON
             } catch (_: SecurityException) {
                 captureFailed = true
                 liveRequested = false
