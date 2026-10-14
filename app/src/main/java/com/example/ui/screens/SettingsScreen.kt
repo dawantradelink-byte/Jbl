@@ -388,7 +388,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Caps maximum volume to prevent sudden hearing fatigue and distortion",
+                                text = "Caps volume changes made in this app at 85%. Android hardware buttons can still change system volume.",
                                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
