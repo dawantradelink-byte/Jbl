@@ -66,6 +66,7 @@ fun AcousticSpeakerVisualizer(
     connectionStatus: ConnectionStatus,
     isPlaying: Boolean,
     volumePercent: Int,
+    audioEffectAvailable: Boolean,
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "audioAcoustics")
