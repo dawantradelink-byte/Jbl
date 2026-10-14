@@ -88,7 +88,6 @@ fun DeviceManagerScreen(
     val haptics = LocalStudioHaptics.current
     val context = LocalContext.current
     val speakerState by viewModel.speakerState.collectAsStateWithLifecycle()
-    val isScanning by viewModel.isScanning.collectAsStateWithLifecycle()
     val pairedDevices by viewModel.discoveredDevices.collectAsStateWithLifecycle()
     val highlightColor = MaterialTheme.colorScheme.primary
     val primaryColor = MaterialTheme.colorScheme.primaryContainer
@@ -112,7 +111,7 @@ fun DeviceManagerScreen(
             ) == android.content.pm.PackageManager.PERMISSION_GRANTED
         if (connectGranted && scanGranted) {
             permissionDeniedState = false
-            viewModel.startDiscoveryScan()
+            viewModel.refreshBluetoothDevices()
         } else {
             permissionDeniedState = true
         }
@@ -465,23 +464,13 @@ fun DeviceManagerScreen(
                     .height(42.dp)
                     .testTag("scan_devices_button")
             ) {
-                if (isScanning) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = highlightColor
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Scanning...", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.BluetoothSearching,
-                        contentDescription = "Refresh paired Bluetooth devices",
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Refresh paired", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Refresh paired Bluetooth devices",
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Refresh paired", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
         }
 
