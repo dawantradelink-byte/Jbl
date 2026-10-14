@@ -86,39 +86,39 @@ fun SettingsScreen(
         listOf(
             CapabilityItem(
                 title = "A2DP Bluetooth Audio Streaming",
-                description = "High definition wireless audio broadcast from Android OS",
+                description = "Android routes audio to connected Bluetooth A2DP devices",
                 isSupported = true,
-                note = "Native Android Audio"
+                note = "Android Bluetooth audio profile"
             ),
             CapabilityItem(
                 title = "AVRCP Media Transport Controls",
-                description = "Hardware media sync for Play, Pause, Next, Previous track",
-                isSupported = true,
-                note = "Standard Bluetooth Profile"
+                description = "Play, Pause, Next, Previous track through an Android media session",
+                isSupported = false,
+                note = "Not implemented; use your music app controls"
             ),
             CapabilityItem(
                 title = "System Volume Synchronization",
-                description = "Direct stream volume control with decibel calculation",
+                description = "Read and change Android music-stream volume",
                 isSupported = true,
                 note = "Android AudioManager"
             ),
             CapabilityItem(
                 title = "Hardware Battery Telemetry",
-                description = "Reporting exact remaining battery percentage over Bluetooth",
+                description = "Battery percentage reported by the connected speaker",
                 isSupported = false,
-                note = "Unsupported by generic A2DP speaker chip"
+                note = "Not exposed by the current A2DP-only integration; not verified for every device"
             ),
             CapabilityItem(
                 title = "Proprietary Equalizer Firmware Flashing",
-                description = "Writing internal hardware DSP registers inside speaker chip",
+                description = "Changing the speaker internal DSP or firmware EQ",
                 isSupported = false,
-                note = "Requires proprietary vendor protocol"
+                note = "No documented speaker-specific control protocol is integrated"
             ),
             CapabilityItem(
                 title = "Over-The-Air (OTA) Firmware Updates",
-                description = "Updating internal speaker firmware via smartphone",
+                description = "Updating internal speaker firmware from this app",
                 isSupported = false,
-                note = "Hardware lacks flash loader protocol"
+                note = "Not implemented; requires a documented vendor update protocol"
             )
         )
     }
@@ -388,7 +388,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Caps maximum volume to prevent sudden hearing fatigue and distortion",
+                                text = "Caps volume changes made in this app at 85%. Android hardware buttons can still change system volume.",
                                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -575,7 +575,7 @@ fun SettingsScreen(
                 "Speaker won't connect or LED blinks continuously" to
                         "Turn speaker off by holding power button for 3 seconds. Unpair 'BOOMBOX4MINI' in Android Bluetooth settings, then restart the speaker and initiate pairing again.",
                 "Audio cuts out or crackles at distance" to
-                        "Ensure direct line of sight within 10 meters. Physical barriers, 2.4GHz Wi-Fi crowding, or metal obstructions can cause A2DP packet loss on Bluetooth 5.4.",
+                        "Keep the phone and audio device within practical range. Physical barriers, 2.4GHz Wi-Fi crowding, or metal obstructions can cause Bluetooth audio packet loss.",
                 "Speaker stuck in TF Card or AUX mode" to
                         "Press the physical 'M' (Mode) button once on the speaker to cycle between Bluetooth, TF card, USB, and AUX line-in.",
                 "Volume too low despite phone volume at 100%" to

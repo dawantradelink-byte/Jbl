@@ -26,7 +26,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
+@Config(sdk = [35])
 class ExampleRobolectricTest {
 
     @Test
@@ -37,11 +37,11 @@ class ExampleRobolectricTest {
     }
 
     @Test
-    fun `viewModel initial state has BOOMBOX4MINI speaker`() {
+    fun `viewModel does not invent a connected speaker when none is verified`() {
         val app = ApplicationProvider.getApplicationContext<Application>()
         val vm = BoomboxViewModel(app)
-        assertEquals("BOOMBOX4MINI", vm.speakerState.value.name)
-        assertEquals(ConnectionStatus.CONNECTED, vm.speakerState.value.connectionStatus)
+        assertEquals("No Bluetooth audio connected", vm.speakerState.value.name)
+        assertEquals(ConnectionStatus.DISCONNECTED, vm.speakerState.value.connectionStatus)
     }
 
     @Test
@@ -104,15 +104,15 @@ class ExampleRobolectricTest {
         val vm = BoomboxViewModel(app)
         vm.toggleVolumeLimiter(true)
         vm.setVolume(100)
-        assertEquals(85, vm.mediaState.value.volumePercent)
+        assertEquals(85, vm.audioOutputState.value.volumePercent)
     }
 
     @Test
     fun `viewModel mute toggle updates isMuted state`() {
         val app = ApplicationProvider.getApplicationContext<Application>()
         val vm = BoomboxViewModel(app)
-        val initialMute = vm.mediaState.value.isMuted
+        val initialMute = vm.audioOutputState.value.isMuted
         vm.toggleMute()
-        assertEquals(!initialMute, vm.mediaState.value.isMuted)
+        assertEquals(!initialMute, vm.audioOutputState.value.isMuted)
     }
 }

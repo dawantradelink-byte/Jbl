@@ -90,12 +90,12 @@ fun AudioStudioScreen(
     }
 
     val eqState by viewModel.equalizerState.collectAsStateWithLifecycle()
-    val mediaState by viewModel.mediaState.collectAsStateWithLifecycle()
+    val audioEffectAvailable by viewModel.audioEffectAvailable.collectAsStateWithLifecycle()
 
     val infiniteTransition = rememberInfiniteTransition(label = "eqWaveAnim")
     val wavePhase by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = if (mediaState.isPlaying) 1f else 0.2f,
+        targetValue = 0.2f,
         animationSpec = infiniteRepeatable(
             animation = tween(450, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -135,7 +135,7 @@ fun AudioStudioScreen(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "PARAMETRIC EQUALIZER & DSP",
+                    text = "ANDROID SYSTEM OUTPUT EQ",
                     style = MaterialTheme.typography.labelSmall.copy(
                         letterSpacing = 1.5.sp,
                         fontWeight = FontWeight.Bold
@@ -150,6 +150,7 @@ fun AudioStudioScreen(
                     haptics.snap()
                     viewModel.resetEqualizerFlat()
                 },
+                enabled = audioEffectAvailable,
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
@@ -202,15 +203,15 @@ fun AudioStudioScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         GlassBadge(
-                            text = "ACTIVE",
-                            textColor = PrimaryMint,
-                            borderColor = PrimaryMint.copy(alpha = 0.35f)
+                            text = if (audioEffectAvailable) "SYSTEM EQ ACTIVE" else "UNAVAILABLE",
+                            textColor = if (audioEffectAvailable) PrimaryMint else CrimsonRosePrimary,
+                            borderColor = (if (audioEffectAvailable) PrimaryMint else CrimsonRosePrimary).copy(alpha = 0.35f)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "The BOOMBOX4MINI streams standard Bluetooth Classic audio. Generic A2DP speaker chips lack flashable DSP registers. These curves shape phone-side frequency output and active acoustic response.",
+                        text = "This uses Android's system output Equalizer when the phone supports a global output effect. It changes phone-side audio, not the speaker's internal DSP. If status says UNAVAILABLE, the sliders cannot affect sound on this device.",
                         style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -401,6 +402,7 @@ fun AudioStudioScreen(
                             viewModel.updateBassLevel(it)
                         },
                         valueRange = 0f..1f,
+                        enabled = audioEffectAvailable,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("slider_master_bass")
@@ -449,6 +451,7 @@ fun AudioStudioScreen(
                             viewModel.updateTrebleLevel(it)
                         },
                         valueRange = 0f..1f,
+                        enabled = audioEffectAvailable,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("slider_master_treble")
@@ -502,10 +505,12 @@ fun AudioStudioScreen(
                         },
                     surfaceAlpha = if (isSelected) 0.80f else 0.40f,
                     borderAlpha = if (isSelected) 0.70f else 0.20f,
-                    onClick = {
-                        haptics.click()
-                        viewModel.selectPreset(preset)
-                    }
+                    onClick = if (audioEffectAvailable) {
+                        {
+                            haptics.click()
+                            viewModel.selectPreset(preset)
+                        }
+                    } else null
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
                         Text(
@@ -574,6 +579,7 @@ fun AudioStudioScreen(
                                 viewModel.updateBandGain(band.bandIndex, it)
                             },
                             valueRange = -12f..12f,
+                            enabled = audioEffectAvailable,
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 6.dp)

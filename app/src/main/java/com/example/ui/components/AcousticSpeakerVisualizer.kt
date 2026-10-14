@@ -25,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.SpeakerGroup
-import androidx.compose.material.icons.filled.SurroundSound
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -64,8 +63,8 @@ import com.example.ui.theme.TertiaryCrimsonRose
 fun AcousticSpeakerVisualizer(
     speakerName: String,
     connectionStatus: ConnectionStatus,
-    isPlaying: Boolean,
     volumePercent: Int,
+    audioEffectAvailable: Boolean,
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "audioAcoustics")
@@ -73,7 +72,7 @@ fun AcousticSpeakerVisualizer(
     // Passive bass radiator physical excursion pulse
     val bassRadiatorPulse by infiniteTransition.animateFloat(
         initialValue = 0.94f,
-        targetValue = if (isPlaying && connectionStatus == ConnectionStatus.CONNECTED) 1.12f else 1.0f,
+        targetValue = if (connectionStatus == ConnectionStatus.CONNECTED) 1.06f else 1.0f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 420, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -84,7 +83,7 @@ fun AcousticSpeakerVisualizer(
     // Ambient floating glow intensity
     val ambientGlowIntensity by infiniteTransition.animateFloat(
         initialValue = 0.35f,
-        targetValue = if (isPlaying && connectionStatus == ConnectionStatus.CONNECTED) 0.85f else 0.20f,
+        targetValue = if (connectionStatus == ConnectionStatus.CONNECTED) 0.85f else 0.20f,
         animationSpec = infiniteRepeatable(
             animation = tween(1200, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -95,7 +94,7 @@ fun AcousticSpeakerVisualizer(
     // Waveform variation offsets for driver cones
     val waveOffset1 by infiniteTransition.animateFloat(
         initialValue = 0.20f,
-        targetValue = if (isPlaying && connectionStatus == ConnectionStatus.CONNECTED) 0.95f else 0.15f,
+        targetValue = if (connectionStatus == ConnectionStatus.CONNECTED) 0.95f else 0.15f,
         animationSpec = infiniteRepeatable(
             animation = tween(380, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -104,7 +103,7 @@ fun AcousticSpeakerVisualizer(
     )
     val waveOffset2 by infiniteTransition.animateFloat(
         initialValue = 0.85f,
-        targetValue = if (isPlaying && connectionStatus == ConnectionStatus.CONNECTED) 0.30f else 0.15f,
+        targetValue = if (connectionStatus == ConnectionStatus.CONNECTED) 0.30f else 0.15f,
         animationSpec = infiniteRepeatable(
             animation = tween(520, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -117,7 +116,7 @@ fun AcousticSpeakerVisualizer(
             .fillMaxWidth()
             .testTag("acoustic_speaker_visualizer")
             .semantics {
-                contentDescription = "$speakerName, status: ${connectionStatus.name}, playback: ${if (isPlaying) "active" else "idle"}"
+                contentDescription = "$speakerName, status: ${connectionStatus.name}"
             },
         surfaceAlpha = 0.70f
     ) {
@@ -127,7 +126,7 @@ fun AcousticSpeakerVisualizer(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Status Header Badge: Connected • BT 5.4 HD Audio + 48kHz Surround
+            // Status Header Badge: real Android A2DP state
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -146,11 +145,11 @@ fun AcousticSpeakerVisualizer(
                             modifier = Modifier
                                 .size(7.dp)
                                 .clip(CircleShape)
-                                .background(PrimaryMint)
+                                .background(if (connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else TertiaryCrimsonRose)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (connectionStatus == ConnectionStatus.CONNECTED) "Connected • BT 5.4 HD Audio" else "Standby • Disconnected",
+                            text = if (connectionStatus == ConnectionStatus.CONNECTED) "Connected • Android A2DP" else "No audio route",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
@@ -161,20 +160,20 @@ fun AcousticSpeakerVisualizer(
                     }
                 }
 
-                // 48kHz surround sound badge
+                // System audio output badge
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(end = 4.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.SurroundSound,
-                        contentDescription = "48kHz Audio",
-                        tint = PrimaryMint,
+                        imageVector = Icons.Default.GraphicEq,
+                        contentDescription = "System audio output",
+                        tint = if (connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(15.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "48kHz",
+                        text = "AUDIO",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium
@@ -436,7 +435,7 @@ fun AcousticSpeakerVisualizer(
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Metric 1: BASS (+6 dB BOOST in Sunset Orange)
+                // Metric 1: Android system volume
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -454,14 +453,14 @@ fun AcousticSpeakerVisualizer(
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "BASS",
+                            text = "OUTPUT",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "+6 dB BOOST",
+                        text = "$volumePercent%",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
@@ -470,7 +469,7 @@ fun AcousticSpeakerVisualizer(
                     )
                 }
 
-                // Metric 2: STAGE (360° STEREO in Oceanic Mint)
+                // Metric 2: Android-reported audio route
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -488,23 +487,23 @@ fun AcousticSpeakerVisualizer(
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "STAGE",
+                            text = "ROUTE",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "360° STEREO",
+                        text = if (connectionStatus == ConnectionStatus.CONNECTED) "A2DP" else "OFFLINE",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         ),
-                        color = PrimaryMint
+                        color = if (connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else TertiaryCrimsonRose
                     )
                 }
 
-                // Metric 3: DSP CORE (ACTIVE 64B in Crimson Rose)
+                // Metric 3: phone-side EQ availability
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -522,14 +521,14 @@ fun AcousticSpeakerVisualizer(
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "DSP CORE",
+                            text = "PHONE EQ",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "ACTIVE 64B",
+                        text = if (audioEffectAvailable) "AVAILABLE" else "UNAVAILABLE",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold

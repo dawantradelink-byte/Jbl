@@ -7,10 +7,11 @@ import com.example.data.AudioManagerHelper
 import com.example.data.BluetoothManagerHelper
 import com.example.data.DiscoveredSpeaker
 import com.example.data.StudioPreferencesRepository
+import com.example.data.SystemEqualizerHelper
 import com.example.model.ConnectionStatus
 import com.example.model.EqualizerPreset
 import com.example.model.FrequencyBand
-import com.example.model.MediaPlaybackState
+import com.example.model.AudioOutputState
 import com.example.model.SpeakerDevice
 import com.example.model.SpeakerInput
 import com.example.model.StudioEqualizerState
@@ -36,6 +37,9 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     private val audioHelper = AudioManagerHelper(application)
     private val btHelper = BluetoothManagerHelper(application)
     private val prefsRepo = StudioPreferencesRepository(application)
+    private val systemEqualizer = SystemEqualizerHelper()
+    private val _audioEffectAvailable = MutableStateFlow(systemEqualizer.isAvailable)
+    val audioEffectAvailable: StateFlow<Boolean> = _audioEffectAvailable.asStateFlow()
 
     val activeTheme: StateFlow<StudioTheme> = prefsRepo.activeThemeFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, StudioTheme.SUNSET_GLOW)
@@ -44,26 +48,19 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         .stateIn(viewModelScope, SharingStarted.Eagerly, MotionPreference.FULL)
 
     private val _speakerState = MutableStateFlow(
-        SpeakerDevice(connectionStatus = ConnectionStatus.CONNECTED)
+        SpeakerDevice(connectionStatus = ConnectionStatus.DISCONNECTED, macAddress = "Not connected")
     )
     val speakerState: StateFlow<SpeakerDevice> = _speakerState.asStateFlow()
 
-    private val _mediaState = MutableStateFlow(
-        MediaPlaybackState(
-            volumePercent = calculateInitialVolumePercent(),
-            isPlaying = true
-        )
-    )
-    val mediaState: StateFlow<MediaPlaybackState> = _mediaState.asStateFlow()
+    private val _audioOutputState = MutableStateFlow(createInitialAudioOutputState())
+    val audioOutputState: StateFlow<AudioOutputState> = _audioOutputState.asStateFlow()
+    private var lastNonMutedVolumePercent: Int = _audioOutputState.value.volumePercent.coerceAtLeast(1)
 
     private val _equalizerState = MutableStateFlow(StudioEqualizerState())
     val equalizerState: StateFlow<StudioEqualizerState> = _equalizerState.asStateFlow()
 
     private val _settingsState = MutableStateFlow(SettingsState())
     val settingsState: StateFlow<SettingsState> = _settingsState.asStateFlow()
-
-    private val _isScanning = MutableStateFlow(false)
-    val isScanning: StateFlow<Boolean> = _isScanning.asStateFlow()
 
     private val _discoveredDevices = MutableStateFlow<List<DiscoveredSpeaker>>(emptyList())
     val discoveredDevices: StateFlow<List<DiscoveredSpeaker>> = _discoveredDevices.asStateFlow()
@@ -73,8 +70,8 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         refreshPairedDevices()
-        startPlaybackPositionTicker()
         observeStoredSettings()
+        applyCurrentEqualizer()
     }
 
     private fun observeStoredSettings() {
@@ -90,60 +87,15 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    private fun createInitialAudioOutputState(): AudioOutputState {
+        val percent = calculateInitialVolumePercent()
+        return AudioOutputState(volumePercent = percent, isMuted = percent == 0)
+    }
+
     private fun calculateInitialVolumePercent(): Int {
         val current = audioHelper.getStreamMusicVolume()
         val max = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
         return ((current.toFloat() / max.toFloat()) * 100).toInt().coerceIn(0, 100)
-    }
-
-    private fun startPlaybackPositionTicker() {
-        viewModelScope.launch {
-            while (true) {
-                delay(1000)
-                if (_mediaState.value.isPlaying && _mediaState.value.isMediaSessionActive) {
-                    _mediaState.update { current ->
-                        val nextPos = (current.positionSeconds + 1) % (current.durationSeconds.coerceAtLeast(1))
-                        current.copy(positionSeconds = nextPos)
-                    }
-                }
-            }
-        }
-    }
-
-    // Media Controls
-    fun togglePlayPause() {
-        val newPlaying = !_mediaState.value.isPlaying
-        _mediaState.update { it.copy(isPlaying = newPlaying) }
-        audioHelper.togglePlayPause()
-    }
-
-    fun skipNextTrack() {
-        _mediaState.update {
-            it.copy(
-                positionSeconds = 0,
-                trackTitle = when (it.trackTitle) {
-                    "Midnight Bassline" -> "Electric Resonance"
-                    "Electric Resonance" -> "Acoustic Radiator Pulse"
-                    else -> "Midnight Bassline"
-                },
-                artistName = when (it.artistName) {
-                    "Acoustic Horizon" -> "Studio Master 5.4"
-                    else -> "Acoustic Horizon"
-                }
-            )
-        }
-        audioHelper.skipNext()
-    }
-
-    fun skipPreviousTrack() {
-        _mediaState.update {
-            it.copy(
-                positionSeconds = 0,
-                trackTitle = "Midnight Bassline",
-                artistName = "Acoustic Horizon"
-            )
-        }
-        audioHelper.skipPrevious()
     }
 
     fun setVolume(newPercent: Int) {
@@ -153,7 +105,8 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
             newPercent.coerceIn(0, 100)
         }
 
-        _mediaState.update { it.copy(volumePercent = limitedPercent, isMuted = limitedPercent == 0) }
+        if (limitedPercent > 0) lastNonMutedVolumePercent = limitedPercent
+        _audioOutputState.update { it.copy(volumePercent = limitedPercent, isMuted = limitedPercent == 0) }
 
         // Sync with Android system STREAM_MUSIC
         val maxSteps = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
@@ -162,80 +115,64 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun toggleMute() {
-        _mediaState.update { current ->
-            val nextMuted = !current.isMuted
-            val nextVol = if (nextMuted) 0 else 50
-            if (nextMuted) {
-                audioHelper.setStreamMusicVolume(0)
-            } else {
-                val maxSteps = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
-                audioHelper.setStreamMusicVolume(maxSteps / 2)
-            }
-            current.copy(isMuted = nextMuted, volumePercent = nextVol)
-        }
-    }
-
-    fun toggleEmptyMediaState() {
-        _mediaState.update { current ->
-            if (current.isMediaSessionActive) {
-                current.copy(
-                    isMediaSessionActive = false,
-                    trackTitle = null,
-                    artistName = null,
-                    albumName = null,
-                    isPlaying = false
-                )
-            } else {
-                current.copy(
-                    isMediaSessionActive = true,
-                    trackTitle = "Midnight Bassline",
-                    artistName = "Acoustic Horizon",
-                    albumName = "Studio Sessions Vol. 4",
-                    isPlaying = true
-                )
-            }
-        }
-    }
-
-    // Connection Controls
-    fun toggleConnection() {
-        val current = _speakerState.value.connectionStatus
-        if (current == ConnectionStatus.CONNECTED) {
-            _speakerState.update { it.copy(connectionStatus = ConnectionStatus.DISCONNECTED) }
-            showToastMessage("Disconnected from BOOMBOX4MINI")
+        val current = _audioOutputState.value
+        val requestedVolume = if (current.isMuted) {
+            lastNonMutedVolumePercent.coerceIn(1, 100)
         } else {
-            reconnectSpeaker()
+            lastNonMutedVolumePercent = current.volumePercent.coerceAtLeast(1)
+            0
         }
+        val nextVolume = if (_settingsState.value.volumeLimiterEnabled) {
+            requestedVolume.coerceAtMost(_settingsState.value.maxSafeVolumePercent)
+        } else {
+            requestedVolume
+        }
+        if (nextVolume > 0) lastNonMutedVolumePercent = nextVolume
+        val maxSteps = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
+        val targetStep = ((nextVolume / 100f) * maxSteps).toInt().coerceIn(0, maxSteps)
+        audioHelper.setStreamMusicVolume(targetStep)
+        _audioOutputState.update { it.copy(isMuted = nextVolume == 0, volumePercent = nextVolume) }
     }
 
-    fun reconnectSpeaker() {
-        viewModelScope.launch {
-            _speakerState.update { it.copy(connectionStatus = ConnectionStatus.CONNECTING) }
-            delay(1200)
-            _speakerState.update { it.copy(connectionStatus = ConnectionStatus.CONNECTED) }
-            showToastMessage("Connected to BOOMBOX4MINI (A2DP / AVRCP)")
-        }
-    }
-
+    // Connection state is refreshed from Android's real A2DP profile state in refreshPairedDevices().
     fun selectSpeakerInput(input: SpeakerInput) {
-        if (input.isPhysicalSwitch) {
-            showToastMessage("${input.title} requires physical mode button switch on BOOMBOX4MINI")
+        val message = if (input == SpeakerInput.BLUETOOTH) {
+            "Bluetooth connection is managed by Android. Use the Bluetooth settings button to connect or disconnect."
+        } else {
+            "${input.title} cannot be controlled from this app. Use the speaker's physical mode button."
         }
-        _speakerState.update { it.copy(currentInput = input) }
+        showToastMessage(message)
     }
 
     fun refreshPairedDevices() {
         _discoveredDevices.value = btHelper.getPairedAudioDevices()
+        val connected = btHelper.isA2dpConnected()
+        _speakerState.update { current ->
+            if (connected) {
+                current.copy(
+                    name = "Bluetooth audio connected",
+                    modelNumber = "Android-reported A2DP",
+                    macAddress = "Not exposed by this status check",
+                    bluetoothVersion = "A2DP connection",
+                    connectionStatus = ConnectionStatus.CONNECTED,
+                    activeCodec = "System managed"
+                )
+            } else {
+                current.copy(
+                    name = "No Bluetooth audio connected",
+                    modelNumber = "Not available",
+                    macAddress = "Not connected",
+                    bluetoothVersion = "Unavailable",
+                    connectionStatus = ConnectionStatus.DISCONNECTED,
+                    activeCodec = "Unavailable"
+                )
+            }
+        }
     }
 
-    fun startDiscoveryScan() {
-        viewModelScope.launch {
-            _isScanning.value = true
-            delay(2000)
-            refreshPairedDevices()
-            _isScanning.value = false
-            showToastMessage("Scan complete: Discovered paired audio endpoints")
-        }
+    fun refreshBluetoothDevices() {
+        refreshPairedDevices()
+        showToastMessage("Paired Bluetooth devices and A2DP status refreshed.")
     }
 
     // Equalizer Controls
@@ -296,6 +233,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
                 trebleLevel = treble
             )
         }
+        applyCurrentEqualizer()
     }
 
     fun updateBandGain(bandIndex: Int, newGain: Float) {
@@ -308,6 +246,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
                 bands = updated
             )
         }
+        applyCurrentEqualizer()
     }
 
     fun updateBassLevel(level: Float) {
@@ -317,6 +256,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
                 bassLevel = level.coerceIn(0f, 1f)
             )
         }
+        applyCurrentEqualizer()
     }
 
     fun updateTrebleLevel(level: Float) {
@@ -326,29 +266,35 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
                 trebleLevel = level.coerceIn(0f, 1f)
             )
         }
-    }
-
-    fun updateBassBoost(amount: Float) {
-        _equalizerState.update {
-            it.copy(
-                preset = EqualizerPreset.CUSTOM,
-                bassBoostAmount = amount.coerceIn(0f, 1f)
-            )
-        }
-    }
-
-    fun updateVirtualizer(amount: Float) {
-        _equalizerState.update {
-            it.copy(
-                preset = EqualizerPreset.CUSTOM,
-                virtualizerAmount = amount.coerceIn(0f, 1f)
-            )
-        }
+        applyCurrentEqualizer()
     }
 
     fun resetEqualizerFlat() {
         selectPreset(EqualizerPreset.BALANCED)
-        showToastMessage("Equalizer curve reset to 0 dB Studio Flat")
+        showToastMessage(
+            if (_audioEffectAvailable.value) "System output equalizer reset to flat."
+            else "Equalizer is unavailable on this device; no audio changes were applied."
+        )
+    }
+
+    private fun applyCurrentEqualizer() {
+        val state = _equalizerState.value
+        val bassOffset = (state.bassLevel - 0.5f) * 12f
+        val trebleOffset = (state.trebleLevel - 0.5f) * 12f
+        val gains = state.bands.mapIndexed { index, band ->
+            val toneOffset = when (index) {
+                0, 1 -> bassOffset
+                3, 4 -> trebleOffset
+                else -> 0f
+            }
+            (band.gainDb + toneOffset).coerceIn(-12f, 12f)
+        }
+        _audioEffectAvailable.value = systemEqualizer.applyFiveBandCurve(gains)
+    }
+
+    override fun onCleared() {
+        systemEqualizer.release()
+        super.onCleared()
     }
 
     // Settings & Theme
@@ -367,19 +313,20 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun toggleVolumeLimiter(enabled: Boolean) {
+        // Apply immediately so the next slider event cannot exceed the newly selected limit.
+        _settingsState.update { it.copy(volumeLimiterEnabled = enabled) }
+        if (enabled && _audioOutputState.value.volumePercent > _settingsState.value.maxSafeVolumePercent) {
+            setVolume(_settingsState.value.maxSafeVolumePercent)
+        }
         viewModelScope.launch {
             prefsRepo.setVolumeLimiter(enabled)
-            _settingsState.update { it.copy(volumeLimiterEnabled = enabled) }
-            if (enabled && _mediaState.value.volumePercent > _settingsState.value.maxSafeVolumePercent) {
-                setVolume(_settingsState.value.maxSafeVolumePercent)
-            }
         }
     }
 
     fun toggleHaptic(enabled: Boolean) {
+        _settingsState.update { it.copy(hapticFeedbackEnabled = enabled) }
         viewModelScope.launch {
             prefsRepo.setHapticsEnabled(enabled)
-            _settingsState.update { it.copy(hapticFeedbackEnabled = enabled) }
         }
     }
 

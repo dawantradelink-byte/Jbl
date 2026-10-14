@@ -1,6 +1,8 @@
 package com.example.ui.screens
 
 import android.Manifest
+import android.content.Intent
+import android.provider.Settings
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,14 +28,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothSearching
-import androidx.compose.material.icons.filled.Cable
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.SdCard
-import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -51,7 +50,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -82,8 +83,8 @@ fun DeviceManagerScreen(
     modifier: Modifier = Modifier
 ) {
     val haptics = LocalStudioHaptics.current
+    val context = LocalContext.current
     val speakerState by viewModel.speakerState.collectAsStateWithLifecycle()
-    val isScanning by viewModel.isScanning.collectAsStateWithLifecycle()
     val pairedDevices by viewModel.discoveredDevices.collectAsStateWithLifecycle()
     val highlightColor = MaterialTheme.colorScheme.primary
     val primaryColor = MaterialTheme.colorScheme.primaryContainer
@@ -95,11 +96,14 @@ fun DeviceManagerScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val connectGranted = permissions[Manifest.permission.BLUETOOTH_CONNECT] ?: true
-        val scanGranted = permissions[Manifest.permission.BLUETOOTH_SCAN] ?: true
-        if (connectGranted && scanGranted) {
+        val connectGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (connectGranted) {
             permissionDeniedState = false
-            viewModel.startDiscoveryScan()
+            viewModel.refreshBluetoothDevices()
         } else {
             permissionDeniedState = true
         }
@@ -120,7 +124,7 @@ fun DeviceManagerScreen(
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "BLUETOOTH 5.4 & HARDWARE I/O",
+            text = "DEVICE STATUS & HARDWARE I/O",
             style = MaterialTheme.typography.labelSmall.copy(
                 letterSpacing = 1.5.sp,
                 fontWeight = FontWeight.Bold
@@ -243,7 +247,7 @@ fun DeviceManagerScreen(
                     Button(
                         onClick = {
                             haptics.snap()
-                            viewModel.reconnectSpeaker()
+                            viewModel.refreshPairedDevices()
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -261,13 +265,13 @@ fun DeviceManagerScreen(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Reconnect", fontWeight = FontWeight.Bold)
+                        Text("Refresh status", fontWeight = FontWeight.Bold)
                     }
 
                     OutlinedButton(
                         onClick = {
                             haptics.snap()
-                            viewModel.toggleConnection()
+                            context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -287,7 +291,7 @@ fun DeviceManagerScreen(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = if (speakerState.connectionStatus == ConnectionStatus.CONNECTED) "Disconnect" else "Connect",
+                            text = "Bluetooth settings",
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -314,13 +318,8 @@ fun DeviceManagerScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             speakerState.supportedInputs.forEach { input ->
-                val isActive = speakerState.currentInput == input
-                val inputColor = when (input) {
-                    SpeakerInput.BLUETOOTH -> PrimaryMint
-                    SpeakerInput.AUX -> SecondarySunsetOrange
-                    SpeakerInput.TF_CARD -> DreamyPinkHighlight
-                    SpeakerInput.USB -> TertiaryCrimsonRose
-                }
+                val isActive = speakerState.connectionStatus == ConnectionStatus.CONNECTED && speakerState.currentInput == input
+                val inputColor = PrimaryMint
                 GlassCard(
                     modifier = Modifier.testTag("input_${input.name.lowercase()}"),
                     surfaceAlpha = if (isActive) 0.70f else 0.40f,
@@ -351,12 +350,7 @@ fun DeviceManagerScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = when (input) {
-                                    SpeakerInput.BLUETOOTH -> Icons.Default.Bluetooth
-                                    SpeakerInput.AUX -> Icons.Default.Cable
-                                    SpeakerInput.TF_CARD -> Icons.Default.SdCard
-                                    SpeakerInput.USB -> Icons.Default.Usb
-                                },
+                                imageVector = Icons.Default.Bluetooth,
                                 contentDescription = input.title,
                                 tint = if (isActive) inputColor else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp)
@@ -373,14 +367,6 @@ fun DeviceManagerScreen(
                                     fontWeight = FontWeight.SemiBold,
                                     color = if (isActive) inputColor else MaterialTheme.colorScheme.onSurface
                                 )
-                                if (input.isPhysicalSwitch) {
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "PHYSICAL SWITCH",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold),
-                                        color = inputColor
-                                    )
-                                }
                             }
                             Text(
                                 text = input.description,
@@ -411,7 +397,7 @@ fun DeviceManagerScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "BLUETOOTH AUDIO ENDPOINTS",
+                text = "PAIRED BLUETOOTH DEVICES",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
@@ -423,14 +409,21 @@ fun DeviceManagerScreen(
                 onClick = {
                     haptics.click()
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        permissionLauncher.launch(
-                            arrayOf(
-                                Manifest.permission.BLUETOOTH_CONNECT,
-                                Manifest.permission.BLUETOOTH_SCAN
-                            )
-                        )
+                        val required = arrayOf(Manifest.permission.BLUETOOTH_CONNECT)
+                        val missing = required.filter { permission ->
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                permission
+                            ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                        }
+                        if (missing.isEmpty()) {
+                            permissionDeniedState = false
+                            viewModel.refreshBluetoothDevices()
+                        } else {
+                            permissionLauncher.launch(missing.toTypedArray())
+                        }
                     } else {
-                        viewModel.startDiscoveryScan()
+                        viewModel.refreshBluetoothDevices()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -442,23 +435,13 @@ fun DeviceManagerScreen(
                     .height(42.dp)
                     .testTag("scan_devices_button")
             ) {
-                if (isScanning) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = highlightColor
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Scanning...", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.BluetoothSearching,
-                        contentDescription = "Scan Nearby Bluetooth Audio",
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Scan Nearby", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Refresh paired Bluetooth devices",
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Refresh paired", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
         }
 
@@ -473,7 +456,7 @@ fun DeviceManagerScreen(
                     .padding(12.dp)
             ) {
                 Text(
-                    text = "Bluetooth permission is required to scan for endpoints. Open Android Settings > Apps > BOOMBOX Control Studio > Permissions to allow Bluetooth.",
+                    text = "Bluetooth permission is required to read paired devices and connection status. Open Android Settings > Apps > BOOMBOX Control Studio > Permissions to allow Bluetooth.",
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.sp),
                     color = Color(0xFFFDA4AF)
                 )
@@ -514,7 +497,7 @@ fun DeviceManagerScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "${device.address} • Paired Audio Endpoint",
+                                text = "${device.address} • Paired device",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -542,7 +525,7 @@ fun DeviceManagerScreen(
                 }
                 .testTag("pairing_guide_toggle")
                 .semantics {
-                    contentDescription = "BOOMBOX4MINI Pairing Instructions, ${if (showPairingGuide) "Expanded" else "Collapsed"}"
+                    contentDescription = "Bluetooth Pairing Instructions, ${if (showPairingGuide) "Expanded" else "Collapsed"}"
                 },
             surfaceAlpha = 0.50f
         ) {
@@ -561,7 +544,7 @@ fun DeviceManagerScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "BOOMBOX4MINI Pairing Instructions",
+                            text = "Bluetooth Pairing Instructions",
                             style = MaterialTheme.typography.titleMedium.copy(fontSize = 13.sp),
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -581,11 +564,11 @@ fun DeviceManagerScreen(
                         modifier = Modifier.padding(top = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        PairingStepItem("1", "Hold Power button for 2 seconds until acoustic chime sounds.")
-                        PairingStepItem("2", "Observe the front LED indicator flashing blue rapidly (Pairing Mode).")
-                        PairingStepItem("3", "If paired with another phone, hold Play/Pause button for 3 seconds to unbind.")
-                        PairingStepItem("4", "Open Android Settings > Connected Devices > Pair new device.")
-                        PairingStepItem("5", "Tap 'BOOMBOX4MINI' to link. Return to this studio for audio management.")
+                        PairingStepItem("1", "Power on your speaker.")
+                        PairingStepItem("2", "Use the speaker's documented Bluetooth or pairing control to enter pairing mode.")
+                        PairingStepItem("3", "On your phone, open Android Settings > Bluetooth.")
+                        PairingStepItem("4", "Select the speaker name shown by Android and complete pairing.")
+                        PairingStepItem("5", "Return here and tap Refresh paired to update the device list.")
                     }
                 }
             }

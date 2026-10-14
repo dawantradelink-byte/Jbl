@@ -49,10 +49,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.model.ConnectionStatus
 import com.example.model.EqualizerPreset
 import com.example.ui.components.AcousticSpeakerVisualizer
 import com.example.ui.components.GlassCard
-import com.example.ui.components.MediaPlaybackControls
 import com.example.ui.components.TactileVolumeSlider
 import com.example.ui.theme.PrimaryContainerOceanic
 import com.example.ui.theme.PrimaryMint
@@ -76,10 +76,9 @@ fun HomeScreen(
 ) {
     val haptics = LocalStudioHaptics.current
     val speakerState by viewModel.speakerState.collectAsStateWithLifecycle()
-    val mediaState by viewModel.mediaState.collectAsStateWithLifecycle()
+    val audioOutputState by viewModel.audioOutputState.collectAsStateWithLifecycle()
     val equalizerState by viewModel.equalizerState.collectAsStateWithLifecycle()
-
-    var isPartyBoostLinked by remember { mutableStateOf(false) }
+    val audioEffectAvailable by viewModel.audioEffectAvailable.collectAsStateWithLifecycle()
 
     Column(
         modifier = modifier
@@ -88,13 +87,13 @@ fun HomeScreen(
             .padding(horizontal = 16.dp, vertical = 10.dp)
             .testTag("home_screen")
     ) {
-        // Top Header: BOOMBOX4MINI badge + 5.4 MULTI + Battery 84% + Profile Avatar
+        // Top Header: real Bluetooth status + system EQ status + profile avatar
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left: BOOMBOX4MINI pill + 5.4 MULTI
+            // Left: live Bluetooth connection state
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
@@ -108,17 +107,17 @@ fun HomeScreen(
                             modifier = Modifier
                                 .size(7.dp)
                                 .clip(CircleShape)
-                                .background(PrimaryMint)
+                                .background(if (speakerState.connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else TertiaryCrimsonRose)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "BOOMBOX4MINI",
+                            text = speakerState.name,
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp
                             ),
-                            color = PrimaryMint
+                            color = if (speakerState.connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else TertiaryCrimsonRose
                         )
                     }
                 }
@@ -140,7 +139,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "5.4 MULTI",
+                            text = "BLUETOOTH AUDIO",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -148,30 +147,34 @@ fun HomeScreen(
                 }
             }
 
-            // Right: Battery 84% + Avatar Circle
+            // Right: actual Android output-EQ capability + Avatar Circle
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
                         .background(SurfaceContainerLowest.copy(alpha = 0.60f))
-                        .border(1.dp, SecondarySunsetContainer.copy(alpha = 0.30f), RoundedCornerShape(16.dp))
+                        .border(
+                            1.dp,
+                            (if (audioEffectAvailable) PrimaryMint else TertiaryCrimsonRose).copy(alpha = 0.30f),
+                            RoundedCornerShape(16.dp)
+                        )
                         .padding(horizontal = 9.dp, vertical = 4.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.Bolt,
-                            contentDescription = "Battery charge",
-                            tint = SecondarySunsetOrange,
+                            imageVector = Icons.Default.Equalizer,
+                            contentDescription = "Android system equalizer status",
+                            tint = if (audioEffectAvailable) PrimaryMint else TertiaryCrimsonRose,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "84%",
+                            text = if (audioEffectAvailable) "EQ READY" else "EQ OFF",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             ),
-                            color = SecondarySunsetOrange
+                            color = if (audioEffectAvailable) PrimaryMint else TertiaryCrimsonRose
                         )
                     }
                 }
@@ -182,10 +185,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(PrimaryMint)
-                        .clickable {
-                            haptics.click()
-                        },
+                        .background(PrimaryMint),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -204,27 +204,47 @@ fun HomeScreen(
         AcousticSpeakerVisualizer(
             speakerName = speakerState.name,
             connectionStatus = speakerState.connectionStatus,
-            isPlaying = mediaState.isPlaying && mediaState.isMediaSessionActive,
-            volumePercent = mediaState.volumePercent
+            volumePercent = audioOutputState.volumePercent,
+            audioEffectAvailable = audioEffectAvailable
         )
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Floating Now Playing Glass Console (Waveform visualizer + gradient scrubber + tactile controls)
-        MediaPlaybackControls(
-            mediaState = mediaState,
-            onTogglePlayPause = { viewModel.togglePlayPause() },
-            onSkipNext = { viewModel.skipNextTrack() },
-            onSkipPrevious = { viewModel.skipPreviousTrack() },
-            onToggleEmptyState = { viewModel.toggleEmptyMediaState() }
-        )
+        // Honest media status: no fake track or playback controls without an active media session.
+        GlassCard(
+            modifier = Modifier.fillMaxWidth().testTag("media_session_status"),
+            surfaceAlpha = 0.60f
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Text(
+                    text = "MEDIA CONTROLS",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    ),
+                    color = PrimaryMint
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Use your music app",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Playback metadata and play/pause/skip are not integrated here. Use your music app for playback controls; this app independently controls Android system volume and supported phone-side EQ.",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(14.dp))
 
         // Master Gain & Dynamic Limiter
         TactileVolumeSlider(
-            volumePercent = mediaState.volumePercent,
-            isMuted = mediaState.isMuted,
+            volumePercent = audioOutputState.volumePercent,
+            isMuted = audioOutputState.isMuted,
             onVolumeChanged = { viewModel.setVolume(it) },
             onMuteToggled = { viewModel.toggleMute() }
         )
@@ -249,7 +269,7 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.width(5.dp))
                     Text(
-                        text = "HARDWARE PROFILE PRESET",
+                        text = "PHONE OUTPUT EQ PRESET",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
@@ -260,7 +280,7 @@ fun HomeScreen(
                 }
 
                 Text(
-                    text = "CUSTOM DSP 4.0",
+                    text = if (audioEffectAvailable) "SYSTEM EQ READY" else "SYSTEM EQ UNAVAILABLE",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
@@ -288,7 +308,7 @@ fun HomeScreen(
                             if (isPreset1Selected) SecondarySunsetOrange else Color.Transparent,
                             RoundedCornerShape(8.dp)
                         )
-                        .clickable {
+                        .clickable(enabled = audioEffectAvailable) {
                             haptics.click()
                             viewModel.selectPreset(EqualizerPreset.BASS_BOOST)
                         }
@@ -313,7 +333,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Deep Sub-Bass",
+                                text = "Bass Boost",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
@@ -321,7 +341,7 @@ fun HomeScreen(
                                 color = SecondarySunsetOrange
                             )
                             Text(
-                                text = "40Hz Harmonic",
+                                text = "60–250 Hz emphasis",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -341,7 +361,7 @@ fun HomeScreen(
                             if (isPreset2Selected) PrimaryMint else Color.Transparent,
                             RoundedCornerShape(8.dp)
                         )
-                        .clickable {
+                        .clickable(enabled = audioEffectAvailable) {
                             haptics.click()
                             viewModel.selectPreset(EqualizerPreset.VOCAL)
                         }
@@ -401,7 +421,7 @@ fun HomeScreen(
                             if (isPreset3Selected) RoastedBrownHighlight else Color.Transparent,
                             RoundedCornerShape(8.dp)
                         )
-                        .clickable {
+                        .clickable(enabled = audioEffectAvailable) {
                             haptics.click()
                             viewModel.selectPreset(EqualizerPreset.BALANCED)
                         }
@@ -426,7 +446,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Warm Vinyl",
+                                text = "Balanced",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
@@ -434,7 +454,7 @@ fun HomeScreen(
                                 color = SecondaryFixedPeach
                             )
                             Text(
-                                text = "Tape Saturation",
+                                text = "Flat system response",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -454,7 +474,7 @@ fun HomeScreen(
                             if (isPreset4Selected) TertiaryCrimsonRose else Color.Transparent,
                             RoundedCornerShape(8.dp)
                         )
-                        .clickable {
+                        .clickable(enabled = audioEffectAvailable) {
                             haptics.click()
                             viewModel.selectPreset(EqualizerPreset.CLUB)
                         }
@@ -498,103 +518,6 @@ fun HomeScreen(
         }
 
         Spacer(modifier = Modifier.height(14.dp))
-
-        // PartyBoost Broadcast Banner Card
-        GlassCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("partyboost_banner"),
-            surfaceAlpha = 0.70f
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(PrimaryContainerOceanic.copy(alpha = 0.35f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CellTower,
-                            contentDescription = "PartyBoost Broadcast",
-                            tint = PrimaryMint,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "PartyBoost Multi-Link",
-                                style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(if (isPartyBoostLinked) SecondarySunsetOrange else PrimaryMint)
-                            )
-                        }
-                        Text(
-                            text = if (isPartyBoostLinked) "2 Portable rigs synchronized" else "Sync audio across 100+ portable rigs",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Tactile Multi-Link Pill CTA
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(if (isPartyBoostLinked) SecondarySunsetOrange else PrimaryMint)
-                        .shadow(12.dp, RoundedCornerShape(20.dp), ambientColor = PrimaryMint, spotColor = PrimaryMint)
-                        .clickable {
-                            haptics.snap()
-                            isPartyBoostLinked = !isPartyBoostLinked
-                        }
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
-                        .testTag("broadcast_link_button"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (isPartyBoostLinked) Icons.Default.Check else Icons.Default.AddLink,
-                            contentDescription = null,
-                            tint = if (isPartyBoostLinked) Color(0xFF492900) else PrimaryMintDark,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = if (isPartyBoostLinked) "LINKED (2)" else "LINK +",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
-                            ),
-                            color = if (isPartyBoostLinked) Color(0xFF492900) else PrimaryMintDark
-                        )
-                    }
-                }
-            }
-        }
 
         Spacer(modifier = Modifier.height(84.dp)) // padding for floating glass bottom nav
     }
