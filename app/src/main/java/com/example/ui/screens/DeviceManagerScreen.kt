@@ -28,14 +28,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothSearching
-import androidx.compose.material.icons.filled.Cable
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.SdCard
-import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -322,12 +319,7 @@ fun DeviceManagerScreen(
         ) {
             speakerState.supportedInputs.forEach { input ->
                 val isActive = speakerState.connectionStatus == ConnectionStatus.CONNECTED && speakerState.currentInput == input
-                val inputColor = when (input) {
-                    SpeakerInput.BLUETOOTH -> PrimaryMint
-                    SpeakerInput.AUX -> SecondarySunsetOrange
-                    SpeakerInput.TF_CARD -> DreamyPinkHighlight
-                    SpeakerInput.USB -> TertiaryCrimsonRose
-                }
+                val inputColor = PrimaryMint
                 GlassCard(
                     modifier = Modifier.testTag("input_${input.name.lowercase()}"),
                     surfaceAlpha = if (isActive) 0.70f else 0.40f,
@@ -358,12 +350,7 @@ fun DeviceManagerScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = when (input) {
-                                    SpeakerInput.BLUETOOTH -> Icons.Default.Bluetooth
-                                    SpeakerInput.AUX -> Icons.Default.Cable
-                                    SpeakerInput.TF_CARD -> Icons.Default.SdCard
-                                    SpeakerInput.USB -> Icons.Default.Usb
-                                },
+                                imageVector = Icons.Default.Bluetooth,
                                 contentDescription = input.title,
                                 tint = if (isActive) inputColor else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp)
@@ -380,14 +367,6 @@ fun DeviceManagerScreen(
                                     fontWeight = FontWeight.SemiBold,
                                     color = if (isActive) inputColor else MaterialTheme.colorScheme.onSurface
                                 )
-                                if (input.isPhysicalSwitch) {
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "PHYSICAL SWITCH",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold),
-                                        color = inputColor
-                                    )
-                                }
                             }
                             Text(
                                 text = input.description,
