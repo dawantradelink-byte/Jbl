@@ -86,9 +86,9 @@ fun SettingsScreen(
         listOf(
             CapabilityItem(
                 title = "A2DP Bluetooth Audio Streaming",
-                description = "High definition wireless audio broadcast from Android OS",
+                description = "Android routes audio to connected Bluetooth A2DP devices",
                 isSupported = true,
-                note = "Native Android Audio"
+                note = "Android Bluetooth audio profile"
             ),
             CapabilityItem(
                 title = "AVRCP Media Transport Controls",
