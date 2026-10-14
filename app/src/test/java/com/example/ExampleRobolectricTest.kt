@@ -37,11 +37,11 @@ class ExampleRobolectricTest {
     }
 
     @Test
-    fun `viewModel initial state has BOOMBOX4MINI speaker`() {
+    fun `viewModel does not invent a connected speaker when none is verified`() {
         val app = ApplicationProvider.getApplicationContext<Application>()
         val vm = BoomboxViewModel(app)
-        assertEquals("BOOMBOX4MINI", vm.speakerState.value.name)
-        assertEquals(ConnectionStatus.CONNECTED, vm.speakerState.value.connectionStatus)
+        assertEquals("No Bluetooth audio connected", vm.speakerState.value.name)
+        assertEquals(ConnectionStatus.DISCONNECTED, vm.speakerState.value.connectionStatus)
     }
 
     @Test
