@@ -51,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.semantics.contentDescription
@@ -83,6 +84,7 @@ fun DeviceManagerScreen(
     modifier: Modifier = Modifier
 ) {
     val haptics = LocalStudioHaptics.current
+    val context = LocalContext.current
     val speakerState by viewModel.speakerState.collectAsStateWithLifecycle()
     val isScanning by viewModel.isScanning.collectAsStateWithLifecycle()
     val pairedDevices by viewModel.discoveredDevices.collectAsStateWithLifecycle()
@@ -98,7 +100,7 @@ fun DeviceManagerScreen(
     ) { permissions ->
         val connectGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
             ContextCompat.checkSelfPermission(
-                androidx.compose.ui.platform.LocalContext.current,
+                context,
                 Manifest.permission.BLUETOOTH_CONNECT
             ) == android.content.pm.PackageManager.PERMISSION_GRANTED
         val scanGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
