@@ -90,13 +90,12 @@ fun AudioStudioScreen(
     }
 
     val eqState by viewModel.equalizerState.collectAsStateWithLifecycle()
-    val mediaState by viewModel.mediaState.collectAsStateWithLifecycle()
     val audioEffectAvailable by viewModel.audioEffectAvailable.collectAsStateWithLifecycle()
 
     val infiniteTransition = rememberInfiniteTransition(label = "eqWaveAnim")
     val wavePhase by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = if (mediaState.isPlaying) 1f else 0.2f,
+        targetValue = 0.2f,
         animationSpec = infiniteRepeatable(
             animation = tween(450, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
