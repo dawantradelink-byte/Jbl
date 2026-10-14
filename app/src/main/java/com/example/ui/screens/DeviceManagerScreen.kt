@@ -132,7 +132,7 @@ fun DeviceManagerScreen(
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "BLUETOOTH 5.4 & HARDWARE I/O",
+            text = "DEVICE STATUS & HARDWARE I/O",
             style = MaterialTheme.typography.labelSmall.copy(
                 letterSpacing = 1.5.sp,
                 fontWeight = FontWeight.Bold
