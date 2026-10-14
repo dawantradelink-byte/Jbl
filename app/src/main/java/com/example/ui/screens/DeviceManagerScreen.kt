@@ -475,11 +475,11 @@ fun DeviceManagerScreen(
                 } else {
                     Icon(
                         imageVector = Icons.Default.BluetoothSearching,
-                        contentDescription = "Scan Nearby Bluetooth Audio",
+                        contentDescription = "Refresh paired Bluetooth devices",
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Scan Nearby", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Refresh paired", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
