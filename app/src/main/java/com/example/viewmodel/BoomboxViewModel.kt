@@ -44,7 +44,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         .stateIn(viewModelScope, SharingStarted.Eagerly, MotionPreference.FULL)
 
     private val _speakerState = MutableStateFlow(
-        SpeakerDevice(connectionStatus = ConnectionStatus.CONNECTED)
+        SpeakerDevice(connectionStatus = ConnectionStatus.DISCONNECTED, macAddress = "Not connected")
     )
     val speakerState: StateFlow<SpeakerDevice> = _speakerState.asStateFlow()
 
@@ -199,22 +199,17 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
 
     // Connection Controls
     fun toggleConnection() {
-        val current = _speakerState.value.connectionStatus
-        if (current == ConnectionStatus.CONNECTED) {
-            _speakerState.update { it.copy(connectionStatus = ConnectionStatus.DISCONNECTED) }
-            showToastMessage("Disconnected from BOOMBOX4MINI")
-        } else {
-            reconnectSpeaker()
-        }
+        showToastMessage(
+            "Use Android Bluetooth settings to connect or disconnect your speaker. " +
+                "This app will not report a connection until the operating system confirms it."
+        )
     }
 
     fun reconnectSpeaker() {
-        viewModelScope.launch {
-            _speakerState.update { it.copy(connectionStatus = ConnectionStatus.CONNECTING) }
-            delay(1200)
-            _speakerState.update { it.copy(connectionStatus = ConnectionStatus.CONNECTED) }
-            showToastMessage("Connected to BOOMBOX4MINI (A2DP / AVRCP)")
-        }
+        refreshPairedDevices()
+        showToastMessage(
+            "Paired-device list refreshed. If your speaker is not connected, open Android Bluetooth settings and connect it there."
+        )
     }
 
     fun selectSpeakerInput(input: SpeakerInput) {
