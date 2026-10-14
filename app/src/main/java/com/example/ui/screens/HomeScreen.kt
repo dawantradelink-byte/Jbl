@@ -81,6 +81,7 @@ fun HomeScreen(
     val audioOutputState by viewModel.audioOutputState.collectAsStateWithLifecycle()
     val equalizerState by viewModel.equalizerState.collectAsStateWithLifecycle()
     val audioEffectAvailable by viewModel.audioEffectAvailable.collectAsStateWithLifecycle()
+    val settingsState by viewModel.settingsState.collectAsStateWithLifecycle()
 
     val displayedEqGains = remember(equalizerState) {
         val bassOffset = (equalizerState.bassLevel - 0.5f) * 12f
@@ -202,7 +203,10 @@ fun HomeScreen(
             volumePercent = audioOutputState.volumePercent,
             isMuted = audioOutputState.isMuted,
             onVolumeChanged = { viewModel.setVolume(it) },
-            onMuteToggled = { viewModel.toggleMute() }
+            onMuteToggled = { viewModel.toggleMute() },
+            volumeLimiterEnabled = settingsState.volumeLimiterEnabled,
+            onMaxOutputRequested = { viewModel.enableMaxOutput() },
+            onSafeLimitRequested = { viewModel.enableSafeVolumeLimit() }
         )
 
         Spacer(modifier = Modifier.height(14.dp))
