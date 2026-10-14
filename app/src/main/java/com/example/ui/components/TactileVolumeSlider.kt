@@ -199,7 +199,7 @@ fun TactileVolumeSlider(
                             currentOnVolumeChanged(newVolume)
                         }
                     }
-                    .pointerInput(constraints.maxWidth) {
+                    .pointerInput(volumePercent) {
                         detectDragGestures(
                             onDragStart = { position ->
                                 dragOffset = position.x
