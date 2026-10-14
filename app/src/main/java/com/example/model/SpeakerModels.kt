@@ -11,7 +11,7 @@ enum class SpeakerInput(
     val description: String,
     val isPhysicalSwitch: Boolean
 ) {
-    BLUETOOTH("Bluetooth 5.4", "Wireless A2DP / AVRCP active audio stream", false),
+    BLUETOOTH("Bluetooth audio", "Android A2DP audio connection status", false),
     AUX("3.5mm AUX Input", "Physical analog line-in detected via 3.5mm jack", true),
     TF_CARD("TF / MicroSD", "Internal MP3/WAV playback from card slot", true),
     USB("USB Flash Drive", "Direct digital playback from USB-A storage", true)
