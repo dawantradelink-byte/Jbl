@@ -422,7 +422,7 @@ fun DeviceManagerScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "BLUETOOTH AUDIO ENDPOINTS",
+                text = "PAIRED BLUETOOTH DEVICES",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
@@ -494,7 +494,7 @@ fun DeviceManagerScreen(
                     .padding(12.dp)
             ) {
                 Text(
-                    text = "Bluetooth permission is required to scan for endpoints. Open Android Settings > Apps > BOOMBOX Control Studio > Permissions to allow Bluetooth.",
+                    text = "Bluetooth permission is required to read paired devices and connection status. Open Android Settings > Apps > BOOMBOX Control Studio > Permissions to allow Bluetooth.",
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.sp),
                     color = Color(0xFFFDA4AF)
                 )
@@ -535,7 +535,7 @@ fun DeviceManagerScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "${device.address} • Paired Audio Endpoint",
+                                text = "${device.address} • Paired device",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
