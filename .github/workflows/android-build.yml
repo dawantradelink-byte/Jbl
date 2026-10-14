@@ -2,10 +2,6 @@ name: Android build and tests
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
-      - fix/real-device-connection-and-ui-log
   workflow_dispatch:
 
 permissions:
