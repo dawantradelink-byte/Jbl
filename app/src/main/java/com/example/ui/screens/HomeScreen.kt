@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.BluetoothConnected
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CellTower
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Equalizer
