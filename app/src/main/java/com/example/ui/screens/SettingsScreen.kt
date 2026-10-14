@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import com.example.BuildConfig
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -649,7 +650,7 @@ fun SettingsScreen(
                     color = highlightColor
                 )
                 Text(
-                    text = "Version 1.2.0-master • Native Android Kotlin / Jetpack Compose M3",
+                    text = "Version ${BuildConfig.VERSION_NAME} • Native Android Kotlin / Jetpack Compose M3",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
