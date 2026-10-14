@@ -326,7 +326,7 @@ fun DeviceManagerScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             speakerState.supportedInputs.forEach { input ->
-                val isActive = speakerState.currentInput == input
+                val isActive = speakerState.connectionStatus == ConnectionStatus.CONNECTED && speakerState.currentInput == input
                 val inputColor = when (input) {
                     SpeakerInput.BLUETOOTH -> PrimaryMint
                     SpeakerInput.AUX -> SecondarySunsetOrange
