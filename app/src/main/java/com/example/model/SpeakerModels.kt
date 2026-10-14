@@ -39,16 +39,9 @@ data class SpeakerDevice(
     val signalDbm: Int = 0
 )
 
-data class MediaPlaybackState(
-    val isPlaying: Boolean = false,
-    val trackTitle: String? = null,
-    val artistName: String? = null,
-    val albumName: String? = null,
-    val positionSeconds: Int = 0,
-    val durationSeconds: Int = 0,
+data class AudioOutputState(
     val volumePercent: Int = 68,
-    val isMuted: Boolean = false,
-    val isMediaSessionActive: Boolean = false
+    val isMuted: Boolean = false
 )
 
 enum class EqualizerPreset(val displayName: String, val subtitle: String) {
