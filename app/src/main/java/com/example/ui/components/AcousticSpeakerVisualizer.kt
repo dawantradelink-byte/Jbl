@@ -150,7 +150,7 @@ fun AcousticSpeakerVisualizer(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (connectionStatus == ConnectionStatus.CONNECTED) "Connected • BT 5.4 HD Audio" else "Standby • Disconnected",
+                            text = if (connectionStatus == ConnectionStatus.CONNECTED) "Connected • Android A2DP" else "No audio route",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
@@ -168,13 +168,13 @@ fun AcousticSpeakerVisualizer(
                 ) {
                     Icon(
                         imageVector = Icons.Default.SurroundSound,
-                        contentDescription = "48kHz Audio",
+                        contentDescription = "System audio output",
                         tint = PrimaryMint,
                         modifier = Modifier.size(15.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "48kHz",
+                        text = "AUDIO",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium
@@ -454,14 +454,14 @@ fun AcousticSpeakerVisualizer(
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "BASS",
+                            text = "OUTPUT",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "+6 dB BOOST",
+                        text = "$volumePercent%",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
@@ -488,14 +488,14 @@ fun AcousticSpeakerVisualizer(
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "STAGE",
+                            text = "ROUTE",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "360° STEREO",
+                        text = if (connectionStatus == ConnectionStatus.CONNECTED) "A2DP" else "OFFLINE",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
@@ -522,14 +522,14 @@ fun AcousticSpeakerVisualizer(
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "DSP CORE",
+                            text = "PHONE EQ",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "ACTIVE 64B",
+                        text = if (audioEffectAvailable) "AVAILABLE" else "UNAVAILABLE",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
