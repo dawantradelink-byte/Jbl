@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -27,6 +28,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -40,7 +43,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -65,6 +67,9 @@ fun TactileVolumeSlider(
     isMuted: Boolean,
     onVolumeChanged: (Int) -> Unit,
     onMuteToggled: () -> Unit,
+    volumeLimiterEnabled: Boolean = true,
+    onMaxOutputRequested: () -> Unit = {},
+    onSafeLimitRequested: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptics = LocalStudioHaptics.current
@@ -80,7 +85,6 @@ fun TactileVolumeSlider(
 
     val currentVolume by rememberUpdatedState(volumePercent)
     val currentOnVolumeChanged by rememberUpdatedState(onVolumeChanged)
-    val density = LocalDensity.current
 
     val dbReadout = when {
         isMuted -> "-inf dB"
@@ -181,11 +185,39 @@ fun TactileVolumeSlider(
             Spacer(modifier = Modifier.height(14.dp))
 
             // Precision Gain Slider with Multi-Chromatic Gradient Fill
+            var dragOffset by remember { mutableFloatStateOf(0f) }
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(36.dp)
+                    .height(42.dp)
                     .testTag("volume_slider_container")
+                    .pointerInput(volumePercent) {
+                        detectTapGestures { tap ->
+                            val fraction = (tap.x / size.width.toFloat()).coerceIn(0f, 1f)
+                            val newVolume = (fraction * 100f).toInt()
+                            hapticTracker.onValueChanged(newVolume.toFloat())
+                            currentOnVolumeChanged(newVolume)
+                        }
+                    }
+                    .pointerInput(volumePercent) {
+                        detectDragGestures(
+                            onDragStart = { position ->
+                                dragOffset = position.x
+                                val newVolume = ((position.x / size.width.toFloat()).coerceIn(0f, 1f) * 100f).toInt()
+                                hapticTracker.onValueChanged(newVolume.toFloat())
+                                currentOnVolumeChanged(newVolume)
+                            },
+                            onDrag = { change, amount ->
+                                change.consume()
+                                dragOffset = (dragOffset + amount.x).coerceIn(0f, size.width.toFloat())
+                                val newVolume = ((dragOffset / size.width.toFloat()).coerceIn(0f, 1f) * 100f).toInt()
+                                if (newVolume != currentVolume) {
+                                    hapticTracker.onValueChanged(newVolume.toFloat())
+                                    currentOnVolumeChanged(newVolume)
+                                }
+                            }
+                        )
+                    }
                     .semantics {
                         role = Role.Button
                         contentDescription = "Master Volume Gain"
@@ -193,7 +225,6 @@ fun TactileVolumeSlider(
                     },
                 contentAlignment = Alignment.CenterStart
             ) {
-                val totalWidthPx = constraints.maxWidth.toFloat()
                 val effectiveFraction = if (isMuted) 0f else (volumePercent / 100f).coerceIn(0f, 1f)
 
                 // Track background
@@ -222,40 +253,30 @@ fun TactileVolumeSlider(
                     )
                 }
 
-                // Drag gesture detector and precision thumb
-                var dragOffset by remember { mutableFloatStateOf(0f) }
-
-                val thumbOffset = ((effectiveFraction * totalWidthPx) - 8.dp.value).coerceIn(0f, totalWidthPx - 16.dp.value)
+                // Smooth, animated precision knob
+                val targetThumbOffset = (maxWidth * effectiveFraction - 12.dp)
+                    .coerceIn(0.dp, (maxWidth - 24.dp).coerceAtLeast(0.dp))
+                val thumbOffset by animateDpAsState(
+                    targetValue = targetThumbOffset,
+                    animationSpec = spring(dampingRatio = 0.82f, stiffness = 650f),
+                    label = "volumeKnobPosition"
+                )
 
                 Box(
                     modifier = Modifier
-                        .offset(x = with(density) { thumbOffset.toDp() })
-                        .size(width = 16.dp, height = 24.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xFFE2E2E3))
-                        .border(1.dp, SurfaceContainerLowest, RoundedCornerShape(4.dp))
-                        .shadow(10.dp, RoundedCornerShape(4.dp), ambientColor = MaterialTheme.colorScheme.primary, spotColor = MaterialTheme.colorScheme.primary)
-                        .pointerInput(totalWidthPx) {
-                            detectDragGestures(
-                                onDragStart = { offset ->
-                                    dragOffset = offset.x
-                                    val newFraction = (offset.x / totalWidthPx).coerceIn(0f, 1f)
-                                    val newVol = (newFraction * 100).toInt()
-                                    hapticTracker.onValueChanged(newVol.toFloat())
-                                    currentOnVolumeChanged(newVol)
-                                },
-                                onDrag = { change, dragAmount ->
-                                    change.consume()
-                                    dragOffset += dragAmount.x
-                                    val newFraction = (dragOffset / totalWidthPx).coerceIn(0f, 1f)
-                                    val newVol = (newFraction * 100).toInt()
-                                    if (newVol != currentVolume) {
-                                        hapticTracker.onValueChanged(newVol.toFloat())
-                                        currentOnVolumeChanged(newVol)
-                                    }
-                                }
+                        .offset(x = thumbOffset)
+                        .size(width = 24.dp, height = 30.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.secondary
+                                )
                             )
-                        },
+                        )
+                        .border(2.dp, MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f), CircleShape)
+                        .shadow(12.dp, CircleShape, ambientColor = MaterialTheme.colorScheme.primary, spotColor = MaterialTheme.colorScheme.primary),
                     contentAlignment = Alignment.Center
                 ) {
                     // Center grip notch
@@ -264,7 +285,7 @@ fun TactileVolumeSlider(
                             .width(2.dp)
                             .height(12.dp)
                             .clip(RoundedCornerShape(1.dp))
-                            .background(Color(0xFF282A2B))
+                            .background(MaterialTheme.colorScheme.onPrimary)
                     )
                 }
             }
@@ -302,6 +323,78 @@ fun TactileVolumeSlider(
                         ),
                         color = MaterialTheme.colorScheme.tertiary
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Explicit, honest output modes: maximum Android stream volume vs the app's 85% limiter.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            if (!volumeLimiterEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                            else SurfaceContainerLowest
+                        )
+                        .border(
+                            1.dp,
+                            if (!volumeLimiterEnabled) MaterialTheme.colorScheme.primary
+                            else OutlineColor.copy(alpha = 0.4f),
+                            RoundedCornerShape(14.dp)
+                        )
+                        .clickable { onMaxOutputRequested() }
+                        .padding(horizontal = 10.dp, vertical = 10.dp)
+                        .testTag("max_output_mode")
+                ) {
+                    Column {
+                        Text(
+                            text = if (!volumeLimiterEnabled) "MAX OUTPUT ACTIVE" else "MAX OUTPUT",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Allow up to 100%",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            if (volumeLimiterEnabled) MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f)
+                            else SurfaceContainerLowest
+                        )
+                        .border(
+                            1.dp,
+                            if (volumeLimiterEnabled) MaterialTheme.colorScheme.secondary
+                            else OutlineColor.copy(alpha = 0.4f),
+                            RoundedCornerShape(14.dp)
+                        )
+                        .clickable { onSafeLimitRequested() }
+                        .padding(horizontal = 10.dp, vertical = 10.dp)
+                        .testTag("safe_volume_mode")
+                ) {
+                    Column {
+                        Text(
+                            text = if (volumeLimiterEnabled) "85% SAFE LIMIT ACTIVE" else "85% SAFE LIMIT",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp),
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Text(
+                            text = "Limit app volume to 85%",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 

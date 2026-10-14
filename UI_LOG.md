@@ -91,3 +91,14 @@ Updated: 2026-10-14
 - CI artifact ID `11885320235` (`boombox-control-studio-debug`); ZIP SHA-256 `6358f7d637e0cd9f876236f33895d02d736b9e01150a457c58672fb5a6c9abda`.
 - Extracted APK SHA-256 `3d990bafc097bfcadb610294b12dbc4563a6566c51b0276ea160bb171db9aaf3`; ZIP and APK archive integrity checks passed.
 - No physical-device or Android 17 emulator test has been performed from this environment. Actual sound-capture availability depends on OS/OEM audio-capture policy.
+
+
+## Master volume knob and output modes — 2026-10-14
+
+### Implemented on `fix/smooth-volume-knob-max-output` (CI pending)
+- Reworked the volume control into a larger circular knob with a spring-smoothed animated position and theme-colored gradient.
+- Fixed touch handling: tap and drag are handled across the full track, not only within the tiny thumb. The previous thumb-local drag coordinates could jump the volume unexpectedly.
+- Added explicit `MAX OUTPUT` mode. On user tap it disables the app's 85% limiter and requests 100% Android music-stream volume. This is a system volume request, not an audio amplifier or speaker DSP boost.
+- Added an `85% SAFE LIMIT` mode that re-enables the limiter and caps the app's volume control at 85%.
+- Max output can be loud; recommend lowering volume if audio is uncomfortable. No claim of sound above Android's hardware/system maximum.
+- Automated CI unit tests and APK build pending. Physical speaker loudness / sound-bar testing cannot be performed in this remote environment.
