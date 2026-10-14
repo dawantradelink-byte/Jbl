@@ -32,7 +32,7 @@ Updated: 2026-10-14
 
 ## Theme and EQ visualizer pass — 2026-10-14
 
-### Implemented on `fix/theme-eq-visualizer` (CI verification pending)
+### Implemented and merged to `main`
 - Fixed the theme application bug: the selected skin colours were animated but were not used by the Material color scheme. The selected accent and its surface tint now flow through Material controls, glass cards, the bottom navigation, volume controls, the speaker artwork, and the animated background. Skin switches remain saved through DataStore.
 - Reworked the Home status header into two clear, compact live status chips. Removed the oversized redundant Bluetooth label and non-functional profile-avatar decoration to prevent horizontal crowding.
 - Replaced the speaker illustration's play-triangle look with an equalizer mark, so artwork no longer suggests that tapping it starts playback.
@@ -41,5 +41,14 @@ Updated: 2026-10-14
 - Preserved the looping background motion and reduced-motion preference.
 
 ### Validation
-- Pull-request CI and APK build: pending.
+- Pull-request CI and APK build passed in [run 38537364248](https://github.com/dawantradelink-byte/Jbl/actions/runs/38537364248) on tested merge candidate `64ca2d6bb7e419c8bf6c9e9d76c4637a7aae0e6e`: unit tests, debug APK assembly, and artifact upload succeeded.
 - No physical-phone interaction test is claimed from this environment.
+
+
+### Verified updated debug APK
+- CI artifact ID: `11881286303`; artifact name `boombox-control-studio-debug`.
+- CI ZIP SHA-256: `23449320b5146a7f671627f196fe14dbd6f90154d5294e96109951173b0dc3f8`.
+- Extracted APK SHA-256: `ee8b7fa43fb3230e829739370efea3c94b53b842f56b8c8f2341277467aae405`.
+- Downloaded APK and ZIP archives were checked with `unzip -t`; no archive-integrity errors were reported.
+- This is a CI debug APK, not a release/Play Store build. CI currently generates an ephemeral debug signing key; an existing APK signed by a different debug key may need to be uninstalled before this build can be installed.
+- Physical-phone interaction and visual regression testing have not been performed from this environment.
