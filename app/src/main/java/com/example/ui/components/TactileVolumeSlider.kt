@@ -191,7 +191,7 @@ fun TactileVolumeSlider(
                     .fillMaxWidth()
                     .height(42.dp)
                     .testTag("volume_slider_container")
-                    .pointerInput(constraints.maxWidth) {
+                    .pointerInput(volumePercent) {
                         detectTapGestures { tap ->
                             val fraction = (tap.x / size.width.toFloat()).coerceIn(0f, 1f)
                             val newVolume = (fraction * 100f).toInt()
