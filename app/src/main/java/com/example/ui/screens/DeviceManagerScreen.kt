@@ -52,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -95,8 +96,16 @@ fun DeviceManagerScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val connectGranted = permissions[Manifest.permission.BLUETOOTH_CONNECT] ?: true
-        val scanGranted = permissions[Manifest.permission.BLUETOOTH_SCAN] ?: true
+        val connectGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            ContextCompat.checkSelfPermission(
+                androidx.compose.ui.platform.LocalContext.current,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val scanGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            ContextCompat.checkSelfPermission(
+                androidx.compose.ui.platform.LocalContext.current,
+                Manifest.permission.BLUETOOTH_SCAN
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
         if (connectGranted && scanGranted) {
             permissionDeniedState = false
             viewModel.startDiscoveryScan()
@@ -423,12 +432,23 @@ fun DeviceManagerScreen(
                 onClick = {
                     haptics.click()
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        permissionLauncher.launch(
-                            arrayOf(
-                                Manifest.permission.BLUETOOTH_CONNECT,
-                                Manifest.permission.BLUETOOTH_SCAN
-                            )
+                        val context = androidx.compose.ui.platform.LocalContext.current
+                        val required = arrayOf(
+                            Manifest.permission.BLUETOOTH_CONNECT,
+                            Manifest.permission.BLUETOOTH_SCAN
                         )
+                        val missing = required.filter { permission ->
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                permission
+                            ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                        }
+                        if (missing.isEmpty()) {
+                            permissionDeniedState = false
+                            viewModel.startDiscoveryScan()
+                        } else {
+                            permissionLauncher.launch(missing.toTypedArray())
+                        }
                     } else {
                         viewModel.startDiscoveryScan()
                     }
