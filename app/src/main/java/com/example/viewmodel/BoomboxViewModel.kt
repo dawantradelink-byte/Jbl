@@ -188,6 +188,28 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
 
     fun refreshPairedDevices() {
         _discoveredDevices.value = btHelper.getPairedAudioDevices()
+        val connected = btHelper.isA2dpConnected()
+        _speakerState.update { current ->
+            if (connected) {
+                current.copy(
+                    name = "Bluetooth audio connected",
+                    modelNumber = "Android-reported A2DP",
+                    macAddress = "Not exposed by this status check",
+                    bluetoothVersion = "A2DP connection",
+                    connectionStatus = ConnectionStatus.CONNECTED,
+                    activeCodec = "System managed"
+                )
+            } else {
+                current.copy(
+                    name = "No Bluetooth audio connected",
+                    modelNumber = "Not available",
+                    macAddress = "Not connected",
+                    bluetoothVersion = "Unavailable",
+                    connectionStatus = ConnectionStatus.DISCONNECTED,
+                    activeCodec = "Unavailable"
+                )
+            }
+        }
     }
 
     fun startDiscoveryScan() {
