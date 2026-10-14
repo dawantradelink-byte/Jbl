@@ -114,6 +114,20 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         audioHelper.setStreamMusicVolume(targetStep)
     }
 
+    fun enableMaxOutput() {
+        // Explicit user action disables the app's 85% limiter and requests Android's maximum music-stream level.
+        _settingsState.update { it.copy(volumeLimiterEnabled = false) }
+        viewModelScope.launch { prefsRepo.setVolumeLimiter(false) }
+        setVolume(100)
+        showToastMessage("Max output enabled. Reduce volume if audio becomes uncomfortable.")
+    }
+
+    fun enableSafeVolumeLimit() {
+        _settingsState.update { it.copy(volumeLimiterEnabled = true) }
+        viewModelScope.launch { prefsRepo.setVolumeLimiter(true) }
+        setVolume(_audioOutputState.value.volumePercent.coerceAtMost(_settingsState.value.maxSafeVolumePercent))
+    }
+
     fun toggleMute() {
         val current = _audioOutputState.value
         val requestedVolume = if (current.isMuted) {
