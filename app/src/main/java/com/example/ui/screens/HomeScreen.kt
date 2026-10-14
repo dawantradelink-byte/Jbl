@@ -46,12 +46,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.model.ConnectionStatus
 import com.example.model.EqualizerPreset
 import com.example.ui.components.AcousticSpeakerVisualizer
+import com.example.ui.components.EqualizerResponseVisualizer
 import com.example.ui.components.GlassCard
 import com.example.ui.components.TactileVolumeSlider
 import com.example.ui.theme.PrimaryContainerOceanic
@@ -80,6 +82,19 @@ fun HomeScreen(
     val equalizerState by viewModel.equalizerState.collectAsStateWithLifecycle()
     val audioEffectAvailable by viewModel.audioEffectAvailable.collectAsStateWithLifecycle()
 
+    val displayedEqGains = remember(equalizerState) {
+        val bassOffset = (equalizerState.bassLevel - 0.5f) * 12f
+        val trebleOffset = (equalizerState.trebleLevel - 0.5f) * 12f
+        equalizerState.bands.mapIndexed { index, band ->
+            val toneOffset = when (index) {
+                0, 1 -> bassOffset
+                3, 4 -> trebleOffset
+                else -> 0f
+            }
+            (band.gainDb + toneOffset).coerceIn(-12f, 12f)
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -87,112 +102,75 @@ fun HomeScreen(
             .padding(horizontal = 16.dp, vertical = 10.dp)
             .testTag("home_screen")
     ) {
-        // Top Header: real Bluetooth status + system EQ status + profile avatar
+        // Compact live status row. These are status indicators, not decorative buttons.
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left: live Bluetooth connection state
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(SurfaceContainerHigh.copy(alpha = 0.70f))
-                        .border(1.dp, PrimaryContainerOceanic.copy(alpha = 0.40f), RoundedCornerShape(16.dp))
-                        .padding(horizontal = 10.dp, vertical = 5.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(7.dp)
-                                .clip(CircleShape)
-                                .background(if (speakerState.connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else TertiaryCrimsonRose)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = speakerState.name,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
-                            ),
-                            color = if (speakerState.connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else TertiaryCrimsonRose
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(6.dp))
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(SurfaceContainerLowest.copy(alpha = 0.60f))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.BluetoothConnected,
-                            contentDescription = null,
-                            tint = PrimaryMint,
-                            modifier = Modifier.size(13.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "BLUETOOTH AUDIO",
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(SurfaceContainerHigh.copy(alpha = 0.72f))
+                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 10.dp, vertical = 7.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (speakerState.connectionStatus == ConnectionStatus.CONNECTED)
+                                    MaterialTheme.colorScheme.primary
+                                else TertiaryCrimsonRose
+                            )
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (speakerState.connectionStatus == ConnectionStatus.CONNECTED)
+                            "BLUETOOTH AUDIO CONNECTED" else "BLUETOOTH AUDIO OFFLINE",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp
+                        ),
+                        color = if (speakerState.connectionStatus == ConnectionStatus.CONNECTED)
+                            MaterialTheme.colorScheme.primary else TertiaryCrimsonRose
+                    )
                 }
             }
 
-            // Right: actual Android output-EQ capability + Avatar Circle
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(SurfaceContainerLowest.copy(alpha = 0.60f))
-                        .border(
-                            1.dp,
-                            (if (audioEffectAvailable) PrimaryMint else TertiaryCrimsonRose).copy(alpha = 0.30f),
-                            RoundedCornerShape(16.dp)
-                        )
-                        .padding(horizontal = 9.dp, vertical = 4.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Equalizer,
-                            contentDescription = "Android system equalizer status",
-                            tint = if (audioEffectAvailable) PrimaryMint else TertiaryCrimsonRose,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(3.dp))
-                        Text(
-                            text = if (audioEffectAvailable) "EQ READY" else "EQ OFF",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = if (audioEffectAvailable) PrimaryMint else TertiaryCrimsonRose
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(PrimaryMint),
-                    contentAlignment = Alignment.Center
-                ) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(SurfaceContainerLowest.copy(alpha = 0.68f))
+                    .border(
+                        1.dp,
+                        (if (audioEffectAvailable) MaterialTheme.colorScheme.primary else TertiaryCrimsonRose)
+                            .copy(alpha = 0.38f),
+                        RoundedCornerShape(16.dp)
+                    )
+                    .padding(horizontal = 9.dp, vertical = 7.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "User Profile",
-                        tint = PrimaryMintDark,
-                        modifier = Modifier.size(18.dp)
+                        imageVector = Icons.Default.Equalizer,
+                        contentDescription = null,
+                        tint = if (audioEffectAvailable) MaterialTheme.colorScheme.primary else TertiaryCrimsonRose,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (audioEffectAvailable) "EQ READY" else "EQ N/A",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = if (audioEffectAvailable) MaterialTheme.colorScheme.primary else TertiaryCrimsonRose
                     )
                 }
             }
@@ -210,34 +188,12 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Honest media status: no fake track or playback controls without an active media session.
-        GlassCard(
-            modifier = Modifier.fillMaxWidth().testTag("media_session_status"),
-            surfaceAlpha = 0.60f
-        ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                Text(
-                    text = "MEDIA CONTROLS",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
-                    ),
-                    color = PrimaryMint
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Use your music app",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "Playback metadata and play/pause/skip are not integrated here. Use your music app for playback controls; this app independently controls Android system volume and supported phone-side EQ.",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        // Old-school visual meter tied to the currently selected 5-band EQ profile.
+        EqualizerResponseVisualizer(
+            bandGainsDb = displayedEqGains,
+            audioEffectAvailable = audioEffectAvailable,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(14.dp))
 
@@ -285,7 +241,7 @@ fun HomeScreen(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
                     ),
-                    color = PrimaryMint
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -305,7 +261,7 @@ fun HomeScreen(
                         .background(SurfaceContainerHigh.copy(alpha = if (isPreset1Selected) 0.95f else 0.70f))
                         .border(
                             1.dp,
-                            if (isPreset1Selected) SecondarySunsetOrange else Color.Transparent,
+                            if (isPreset1Selected) MaterialTheme.colorScheme.secondary else Color.Transparent,
                             RoundedCornerShape(8.dp)
                         )
                         .clickable(enabled = audioEffectAvailable) {
@@ -320,13 +276,13 @@ fun HomeScreen(
                             modifier = Modifier
                                 .size(32.dp)
                                 .clip(CircleShape)
-                                .background(SecondarySunsetContainer.copy(alpha = 0.35f)),
+                                .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Waves,
                                 contentDescription = null,
-                                tint = SecondarySunsetOrange,
+                                tint = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -338,7 +294,7 @@ fun HomeScreen(
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 ),
-                                color = SecondarySunsetOrange
+                                color = MaterialTheme.colorScheme.secondary
                             )
                             Text(
                                 text = "60–250 Hz emphasis",
@@ -358,7 +314,7 @@ fun HomeScreen(
                         .background(SurfaceContainerHigh.copy(alpha = if (isPreset2Selected) 0.95f else 0.70f))
                         .border(
                             1.dp,
-                            if (isPreset2Selected) PrimaryMint else Color.Transparent,
+                            if (isPreset2Selected) MaterialTheme.colorScheme.primary else Color.Transparent,
                             RoundedCornerShape(8.dp)
                         )
                         .clickable(enabled = audioEffectAvailable) {
@@ -373,13 +329,13 @@ fun HomeScreen(
                             modifier = Modifier
                                 .size(32.dp)
                                 .clip(CircleShape)
-                                .background(PrimaryContainerOceanic.copy(alpha = 0.40f)),
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.40f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.NaturePeople,
                                 contentDescription = null,
-                                tint = PrimaryMint,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -391,7 +347,7 @@ fun HomeScreen(
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 ),
-                                color = PrimaryMint
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 text = "Bright Treble / Air",
@@ -486,7 +442,7 @@ fun HomeScreen(
                             modifier = Modifier
                                 .size(32.dp)
                                 .clip(CircleShape)
-                                .background(TertiaryCrimsonContainer.copy(alpha = 0.40f)),
+                                .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.40f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
