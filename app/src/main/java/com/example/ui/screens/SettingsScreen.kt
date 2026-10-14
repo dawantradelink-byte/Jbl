@@ -572,14 +572,14 @@ fun SettingsScreen(
 
         val troubleshootingItems = remember {
             listOf(
-                "Speaker won't connect or LED blinks continuously" to
-                        "Turn speaker off by holding power button for 3 seconds. Unpair 'BOOMBOX4MINI' in Android Bluetooth settings, then restart the speaker and initiate pairing again.",
+                "Speaker doesn't appear in Android Bluetooth settings" to
+                        "Make sure the speaker is powered on and enter pairing mode using its manufacturer's instructions. Keep it near the phone, pair it from Android Bluetooth settings, then return here and refresh the device list.",
                 "Audio cuts out or crackles at distance" to
                         "Keep the phone and audio device within practical range. Physical barriers, 2.4GHz Wi-Fi crowding, or metal obstructions can cause Bluetooth audio packet loss.",
-                "Speaker stuck in TF Card or AUX mode" to
-                        "Press the physical 'M' (Mode) button once on the speaker to cycle between Bluetooth, TF card, USB, and AUX line-in.",
-                "Volume too low despite phone volume at 100%" to
-                        "Disable 'Absolute Volume' in Android Developer Options if your phone limits Bluetooth stream gain, or adjust the physical +/- buttons on the speaker body."
+                "Speaker is connected but there's no sound" to
+                        "Check Android's media volume and the speaker's own volume. Confirm that Android selected the expected Bluetooth audio output. This app does not switch physical AUX, USB, or memory-card inputs.",
+                "Volume still seems too low" to
+                        "Check both Android's media volume and the speaker's own volume controls. Bluetooth volume behavior varies by phone and speaker; this app only sets the Android music-stream volume and its optional in-app limit."
             )
         }
 
@@ -655,7 +655,7 @@ fun SettingsScreen(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Engineered for BOOMBOX4MINI acoustic hardware. Privacy-respecting: no telemetry tracking, no external server requirements, and zero mock hardware claims.",
+                    text = "Uses standard Android Bluetooth routing, system music volume, and optional phone-side equalization when supported. Speaker-specific DSP, battery telemetry, firmware updates, and physical input switching require manufacturer support and are not claimed by this app. The app does not send telemetry to an external server.",
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
