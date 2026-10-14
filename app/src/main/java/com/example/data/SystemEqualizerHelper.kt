@@ -17,12 +17,12 @@ class SystemEqualizerHelper {
     val isAvailable: Boolean
         get() = effect != null
 
-    fun applyFiveBandCurve(gainsDb: List<Float>) {
-        val eq = effect ?: return
+    fun applyFiveBandCurve(gainsDb: List<Float>): Boolean {
+        val eq = effect ?: return false
         val targetFrequenciesHz = listOf(60, 250, 1000, 4000, 14000)
         try {
             val bandCount = eq.numberOfBands.toInt()
-            if (bandCount <= 0) return
+            if (bandCount <= 0) return false
             val range = eq.bandLevelRange
             targetFrequenciesHz.forEachIndexed { targetIndex, frequencyHz ->
                 val targetMilliHz = frequencyHz * 1000
@@ -41,9 +41,11 @@ class SystemEqualizerHelper {
                 eq.setBandLevel(nearestBand.toShort(), level.toShort())
             }
             eq.enabled = true
+            return true
         } catch (_: Exception) {
             // Effect support varies by Android device and audio HAL. Never claim the curve was applied.
             release()
+            return false
         }
     }
 
