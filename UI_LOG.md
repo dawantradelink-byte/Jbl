@@ -65,3 +65,10 @@ Updated: 2026-10-14
 
 ### Validation
 - CI build and tests pending; no physical-device audio-capture test claimed.
+
+
+## Speaker hero animation redesign — 2026-10-14
+- Added five selectable animated effects directly inside the blue-marked speaker stage: Sonic Rings, Orbit particles, Funky Bars, Neon Scan, and Aurora ribbons.
+- Swipe left/right on the speaker illustration to change effects. The active style is marked in blue; a compact label row explains the gesture.
+- The motion is Compose/Canvas animation and does not depend on a Motorola-only API. The visual effects are intended to run across supported Android versions, including Android 16 and 17; actual rendering/performance still needs device verification.
+- Live sound FFT remains a separate optional visualizer capability. The speaker hero animations are ambient effects, not a claim that audio is currently playing.
