@@ -128,10 +128,12 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
 
     // Connection state is refreshed from Android's real A2DP profile state in refreshPairedDevices().
     fun selectSpeakerInput(input: SpeakerInput) {
-        showToastMessage(
-            "${input.title} cannot be switched from this app. Use the speaker's physical mode button; " +
-                "the displayed input is not changed unless the hardware reports it."
-        )
+        val message = if (input == SpeakerInput.BLUETOOTH) {
+            "Bluetooth connection is managed by Android. Use the Bluetooth settings button to connect or disconnect."
+        } else {
+            "${input.title} cannot be controlled from this app. Use the speaker's physical mode button."
+        }
+        showToastMessage(message)
     }
 
     fun refreshPairedDevices() {
@@ -257,24 +259,6 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
             )
         }
         applyCurrentEqualizer()
-    }
-
-    fun updateBassBoost(amount: Float) {
-        _equalizerState.update {
-            it.copy(
-                preset = EqualizerPreset.CUSTOM,
-                bassBoostAmount = amount.coerceIn(0f, 1f)
-            )
-        }
-    }
-
-    fun updateVirtualizer(amount: Float) {
-        _equalizerState.update {
-            it.copy(
-                preset = EqualizerPreset.CUSTOM,
-                virtualizerAmount = amount.coerceIn(0f, 1f)
-            )
-        }
     }
 
     fun resetEqualizerFlat() {
