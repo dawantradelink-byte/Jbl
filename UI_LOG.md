@@ -15,10 +15,11 @@ Updated: 2026-10-14
 - Removed fabricated battery percentage, fake track titles and playback progression, simulated PartyBoost linking, simulated input switching, unused fake media transport component, and unverified Bluetooth/codec/DSP/surround claims.
 - Only Bluetooth is listed as an input capability because that is the only input this integration can verify. Physical AUX/TF/USB mode changes are not simulated.
 - Preserved the looping animated background and reduced-motion support.
+- Replaced model-specific pairing/troubleshooting instructions with generic Android Bluetooth steps; the UI no longer assumes unverified button sequences, LED patterns, or speaker input-switch behavior.
 
 ### Build and test status
-- The latest completed GitHub Actions run passed unit tests and built the debug APK successfully: https://github.com/dawantradelink-byte/Jbl/actions/runs/38522412786
-- The passing run also uploaded artifact `boombox-control-studio-debug` (workflow artifact ID 11875375138). The APK was downloaded and its ZIP container integrity was checked locally; SHA-256: `73aff58cd667a13d1cf45c41efdae1eddfc67709f07b0e4476202f869f6a0d54`.
+- Latest verified app-code build: GitHub Actions run https://github.com/dawantradelink-byte/Jbl/actions/runs/38524808552 (commit `8460d6151eadc331368ce1d1d075269834bcb1d5`); unit tests, debug APK assembly, and artifact upload all passed.
+- Uploaded artifact `boombox-control-studio-debug` (artifact ID 11875384519; 22,087,839-byte ZIP). The APK was extracted and both ZIP container and APK archive integrity were checked locally. APK SHA-256: `812e51eff085b2f364dd18b30ff63c8652bbcfac5888bd2631c98326e67ad897`.
 - Android CI generates an ephemeral debug keystore in the runner so no signing key is committed to the repository.
 - Pull request #1 was merged to `main` after the successful CI run.
 - No physical-device test has been performed from this environment. Real A2DP reporting, phone-side EQ availability, permission behavior, and audible volume/EQ changes still need confirmation on a target phone.
