@@ -43,7 +43,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -86,7 +85,6 @@ fun TactileVolumeSlider(
 
     val currentVolume by rememberUpdatedState(volumePercent)
     val currentOnVolumeChanged by rememberUpdatedState(onVolumeChanged)
-    val density = LocalDensity.current
 
     val dbReadout = when {
         isMuted -> "-inf dB"
@@ -187,6 +185,7 @@ fun TactileVolumeSlider(
             Spacer(modifier = Modifier.height(14.dp))
 
             // Precision Gain Slider with Multi-Chromatic Gradient Fill
+            var dragOffset by remember { mutableFloatStateOf(0f) }
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -226,7 +225,6 @@ fun TactileVolumeSlider(
                     },
                 contentAlignment = Alignment.CenterStart
             ) {
-                val totalWidthPx = constraints.maxWidth.toFloat()
                 val effectiveFraction = if (isMuted) 0f else (volumePercent / 100f).coerceIn(0f, 1f)
 
                 // Track background
@@ -255,9 +253,7 @@ fun TactileVolumeSlider(
                     )
                 }
 
-                // Drag gesture detector and precision thumb
-                var dragOffset by remember { mutableFloatStateOf(0f) }
-
+                // Smooth, animated precision knob
                 val targetThumbOffset = (maxWidth * effectiveFraction - 12.dp)
                     .coerceIn(0.dp, (maxWidth - 24.dp).coerceAtLeast(0.dp))
                 val thumbOffset by animateDpAsState(
