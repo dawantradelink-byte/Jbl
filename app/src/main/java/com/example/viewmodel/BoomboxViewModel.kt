@@ -59,6 +59,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         )
     )
     val mediaState: StateFlow<MediaPlaybackState> = _mediaState.asStateFlow()
+    private var lastNonMutedVolumePercent: Int = _mediaState.value.volumePercent.coerceAtLeast(1)
 
     private val _equalizerState = MutableStateFlow(StudioEqualizerState())
     val equalizerState: StateFlow<StudioEqualizerState> = _equalizerState.asStateFlow()
@@ -120,6 +121,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
             newPercent.coerceIn(0, 100)
         }
 
+        if (limitedPercent > 0) lastNonMutedVolumePercent = limitedPercent
         _mediaState.update { it.copy(volumePercent = limitedPercent, isMuted = limitedPercent == 0) }
 
         // Sync with Android system STREAM_MUSIC
@@ -129,39 +131,15 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun toggleMute() {
-        _mediaState.update { current ->
-            val nextMuted = !current.isMuted
-            val nextVol = if (nextMuted) 0 else 50
-            if (nextMuted) {
-                audioHelper.setStreamMusicVolume(0)
-            } else {
-                val maxSteps = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
-                audioHelper.setStreamMusicVolume(maxSteps / 2)
-            }
-            current.copy(isMuted = nextMuted, volumePercent = nextVol)
+        val current = _mediaState.value
+        val nextVolume = if (current.isMuted) lastNonMutedVolumePercent.coerceIn(1, 100) else {
+            lastNonMutedVolumePercent = current.volumePercent.coerceAtLeast(1)
+            0
         }
-    }
-
-    fun toggleEmptyMediaState() {
-        _mediaState.update { current ->
-            if (current.isMediaSessionActive) {
-                current.copy(
-                    isMediaSessionActive = false,
-                    trackTitle = null,
-                    artistName = null,
-                    albumName = null,
-                    isPlaying = false
-                )
-            } else {
-                current.copy(
-                    isMediaSessionActive = true,
-                    trackTitle = "Midnight Bassline",
-                    artistName = "Acoustic Horizon",
-                    albumName = "Studio Sessions Vol. 4",
-                    isPlaying = true
-                )
-            }
-        }
+        val maxSteps = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
+        val targetStep = ((nextVolume / 100f) * maxSteps).toInt().coerceIn(0, maxSteps)
+        audioHelper.setStreamMusicVolume(targetStep)
+        _mediaState.update { it.copy(isMuted = nextVolume == 0, volumePercent = nextVolume) }
     }
 
     // Connection Controls
