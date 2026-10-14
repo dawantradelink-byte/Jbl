@@ -225,7 +225,7 @@ fun EqualizerResponseVisualizer(
                 else
                     "Phone EQ is unavailable; this remains a profile preview.",
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
-                color = curveColorVariant
+                color = secondaryTextColor
             )
         }
     }
