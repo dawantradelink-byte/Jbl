@@ -69,7 +69,7 @@ class BluetoothManagerHelper(private val context: Context) {
                             name.contains("B4M", ignoreCase = true)
                     DiscoveredSpeaker(
                         name = name,
-                        address = device.address ?: "00:00:00:00:00:00",
+                        address = device.address ?: "Address unavailable",
                         isPaired = true,
                         isBoomboxTarget = isTarget
                     )
