@@ -20,9 +20,9 @@ enum class SpeakerInput(
 data class SpeakerDevice(
     val name: String = "BOOMBOX4MINI",
     val modelNumber: String = "B4M-BT54-GL",
-    val macAddress: String = "00:1A:7D:DA:71:04",
+    val macAddress: String = "Not connected",
     val bluetoothVersion: String = "Bluetooth 5.4 BR/EDR + BLE",
-    val connectionStatus: ConnectionStatus = ConnectionStatus.CONNECTED,
+    val connectionStatus: ConnectionStatus = ConnectionStatus.DISCONNECTED,
     val activeCodec: String = "AAC / SBC HD Audio",
     val ratedPlaybackHours: Int = 5,
     val estimatedMinutesRemaining: Int = 260,
