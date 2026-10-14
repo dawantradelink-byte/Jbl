@@ -84,3 +84,10 @@ Updated: 2026-10-14
 - Effects are Canvas-based Compose animations and do not require a Motorola-specific API. They are intended to run on Android 16/17 as well as other supported Android versions, subject to normal device rendering performance.
 - These hero effects are ambient animation, not claims of live sound capture. Live output FFT remains a separate, opt-in visualizer feature.
 - The main-branch commit containing the six hero animations passed CI in run [38546591771](https://github.com/dawantradelink-byte/Jbl/actions/runs/38546591771). No physical device test is claimed.
+
+
+### Audio visualizer final verification — 2026-10-14
+- Latest merged-main CI run [38546591771](https://github.com/dawantradelink-byte/Jbl/actions/runs/38546591771) passed: unit tests, APK assembly, and artifact upload.
+- CI artifact ID `11885320235` (`boombox-control-studio-debug`); ZIP SHA-256 `6358f7d637e0cd9f876236f33895d02d736b9e01150a457c58672fb5a6c9abda`.
+- Extracted APK SHA-256 `3d990bafc097bfcadb610294b12dbc4563a6566c51b0276ea160bb171db9aaf3`; ZIP and APK archive integrity checks passed.
+- No physical-device or Android 17 emulator test has been performed from this environment. Actual sound-capture availability depends on OS/OEM audio-capture policy.
