@@ -52,3 +52,33 @@ Updated: 2026-10-14
 - Downloaded APK and ZIP archives were checked with `unzip -t`; no archive-integrity errors were reported.
 - This is a CI debug APK, not a release/Play Store build. CI currently generates an ephemeral debug signing key; an existing APK signed by a different debug key may need to be uninstalled before this build can be installed.
 - Physical-phone interaction and visual regression testing have not been performed from this environment.
+
+
+## Sound-reactive EQ styles — 2026-10-14
+
+### Implemented on `feature/live-audio-eq-styles` (CI pending)
+- Redesigned the blue-marked speaker hero with a compact, clearly non-interactive EQ emblem; added a swipeable six-style audio visualizer below it.
+- Visualizer styles: Spectrum Bars, Neon Wave, Circular Pulse, Mirror Peaks, Retro Scope, and Aurora Flow. Horizontal swipe cycles between styles and six position dots show the current style.
+- Added an opt-in `LIVE SOUND` control. It requests Android `RECORD_AUDIO` permission only when tapped, then attempts Android output-mix FFT capture via `android.media.audiofx.Visualizer` session 0. When the OEM/OS allows it, bar/wave levels follow captured FFT. If the device blocks global capture, the UI reports that and retains the EQ-shaped preview instead of pretending to be live.
+- The equalizer response curve remains tied to the selected five-band EQ profile; the sound-reactive graphics are a separate signal layer.
+- Added cleanup for the Android Visualizer effect when the live mode is turned off or the screen is disposed.
+
+### Validation
+- CI build and tests pending; no physical-device audio-capture test claimed.
+
+
+## Speaker hero animation redesign — 2026-10-14
+- Added five selectable animated effects directly inside the blue-marked speaker stage: Sonic Rings, Orbit particles, Funky Bars, Neon Scan, and Aurora ribbons.
+- Swipe left/right on the speaker illustration to change effects. The active style is marked in blue; a compact label row explains the gesture.
+- The motion is Compose/Canvas animation and does not depend on a Motorola-only API. The visual effects are intended to run across supported Android versions, including Android 16 and 17; actual rendering/performance still needs device verification.
+- Live sound FFT remains a separate optional visualizer capability. The speaker hero animations are ambient effects, not a claim that audio is currently playing.
+
+
+## Speaker hero animation redesign — 2026-10-14
+
+- Added six swipe-selectable animation modes to the blue-marked speaker hero: Sonic Pulse, Orbit, Funky Spectrum, Neon Scanner, Aurora Flow, and Starburst.
+- Added electric-blue/neon-blue as signature accents with expanding rings, orbiting particles, moving spectrum bars, a scanner beam, layered ribbons, and radial sparkles.
+- Increased the gesture cycle from five to six styles and updated the on-screen labels/instruction.
+- Effects are Canvas-based Compose animations and do not require a Motorola-specific API. They are intended to run on Android 16/17 as well as other supported Android versions, subject to normal device rendering performance.
+- These hero effects are ambient animation, not claims of live sound capture. Live output FFT remains a separate, opt-in visualizer feature.
+- CI verification for this latest commit is pending; no physical device test is claimed.

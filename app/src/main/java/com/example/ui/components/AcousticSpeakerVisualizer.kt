@@ -7,6 +7,15 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.StrokeCap
+import kotlin.math.sin
+import kotlin.math.cos
+import kotlin.math.abs
+import kotlin.math.PI
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,6 +77,7 @@ fun AcousticSpeakerVisualizer(
     audioEffectAvailable: Boolean,
     modifier: Modifier = Modifier
 ) {
+    var animationStyle by rememberSaveable { mutableIntStateOf(0) }
     val themePrimary = MaterialTheme.colorScheme.primary
     val themeSecondary = MaterialTheme.colorScheme.secondary
     val themeTertiary = MaterialTheme.colorScheme.tertiary
@@ -196,13 +207,17 @@ fun AcousticSpeakerVisualizer(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(144.dp),
+                    .height(164.dp)
+                    .pointerInput(animationStyle) {
+                        var dragTotal = 0f
+                        detectHorizontalDragGestures(onHorizontalDrag = { _, amount -> dragTotal += amount }, onDragEnd = { if (dragTotal < -40f) animationStyle = (animationStyle + 1) % 6; if (dragTotal > 40f) animationStyle = (animationStyle - 1 + 6) % 6; dragTotal = 0f }, onDragCancel = { dragTotal = 0f })
+                    }.testTag("speaker_animation_swipe"),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(144.dp)
+                        .height(164.dp)
                 ) {
                     val w = size.width
                     val h = size.height
@@ -387,6 +402,113 @@ fun AcousticSpeakerVisualizer(
                         center = Offset(rightWooferX, cy)
                     )
 
+
+                    // Six high-energy selectable motion styles. Blue is the signature accent.
+                    val electricBlue = Color(0xFF00B7FF)
+                    val neonBlue = Color(0xFF168BFF)
+                    val motionColors = listOf(electricBlue, themePrimary, themeSecondary, themeTertiary)
+                    when (animationStyle) {
+                        0 -> { // SONIC PULSE: expanding concentric rings
+                            repeat(5) { i ->
+                                val cycle = (waveOffset1 + i * 0.20f) % 1f
+                                val radius = (32.dp.toPx() + cycle * 70.dp.toPx())
+                                drawCircle(
+                                    color = electricBlue.copy(alpha = (1f - cycle) * 0.55f),
+                                    radius = radius,
+                                    center = Offset(cx, cy),
+                                    style = Stroke(width = (3f - cycle * 1.8f).dp.toPx())
+                                )
+                            }
+                        }
+                        1 -> { // ORBIT: orbiting blue particles
+                            repeat(24) { i ->
+                                val angle = i * (2f * PI.toFloat() / 24f) + waveOffset1 * 2.2f
+                                val radius = 57.dp.toPx() + 12.dp.toPx() * sin(waveOffset2 * 5f + i * 0.7f)
+                                val particleSize = (1.6f + 1.8f * ((sin(waveOffset1 * 8f + i) + 1f) / 2f)).dp.toPx()
+                                drawCircle(
+                                    color = motionColors[i % motionColors.size].copy(alpha = 0.92f),
+                                    radius = particleSize,
+                                    center = Offset(cx + cos(angle) * radius, cy + sin(angle) * radius * 0.62f)
+                                )
+                            }
+                        }
+                        2 -> { // FUNKY SPECTRUM: lively multi-color mirrored bars
+                            repeat(33) { i ->
+                                val x = cx - 118.dp.toPx() + i * 7.35.dp.toPx()
+                                val wave = abs(sin(i * 0.39f + waveOffset1 * 7f)) *
+                                    (0.55f + 0.45f * abs(cos(i * 0.21f + waveOffset2 * 5f)))
+                                val barH = (7.dp.toPx() + wave * 35.dp.toPx())
+                                val color = when {
+                                    i % 4 == 0 -> electricBlue
+                                    i % 4 == 1 -> themePrimary
+                                    i % 4 == 2 -> themeSecondary
+                                    else -> themeTertiary
+                                }
+                                drawRoundRect(
+                                    color = color.copy(alpha = 0.90f),
+                                    topLeft = Offset(x, cy + 50.dp.toPx() - barH / 2f),
+                                    size = Size(3.2.dp.toPx(), barH),
+                                    cornerRadius = CornerRadius(2.dp.toPx())
+                                )
+                            }
+                        }
+                        3 -> { // NEON SCANNER: sweeping beam and echo rings
+                            val scanX = 18.dp.toPx() + w * ((waveOffset1 + 0.30f) % 1f)
+                            drawRect(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(Color.Transparent, electricBlue.copy(alpha = 0.16f), Color.Transparent),
+                                    startX = scanX - 24.dp.toPx(), endX = scanX + 24.dp.toPx()
+                                ),
+                                topLeft = Offset(scanX - 24.dp.toPx(), cy - 61.dp.toPx()),
+                                size = Size(48.dp.toPx(), 122.dp.toPx())
+                            )
+                            drawLine(electricBlue.copy(alpha = 0.95f), Offset(scanX, cy - 60.dp.toPx()), Offset(scanX, cy + 60.dp.toPx()), 2.dp.toPx())
+                            repeat(3) { i ->
+                                val radius = (28.dp.toPx() + i * 17.dp.toPx()) + 5.dp.toPx() * sin(waveOffset2 * 6f + i)
+                                drawCircle(neonBlue.copy(alpha = 0.65f - i * 0.12f), radius, Offset(cx + sin(waveOffset2 * 3f) * 48.dp.toPx(), cy), style = Stroke(width = 2.dp.toPx()))
+                            }
+                        }
+                        4 -> { // AURORA: layered flowing blue ribbons
+                            repeat(4) { layer ->
+                                val path = Path()
+                                for (i in 0..64) {
+                                    val x = w * i / 64f
+                                    val envelope = sin((i / 64f) * PI.toFloat()).coerceAtLeast(0f)
+                                    val y = cy + (layer - 1.5f) * 15.dp.toPx() +
+                                        sin(i * 0.19f + waveOffset1 * 6f + layer * 1.4f) * (6.dp.toPx() + envelope * 12.dp.toPx())
+                                    if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                                }
+                                drawPath(
+                                    path,
+                                    listOf(electricBlue, themePrimary, themeSecondary, neonBlue)[layer].copy(alpha = 0.75f - layer * 0.08f),
+                                    style = Stroke(width = if (layer == 0) 3.dp.toPx() else 2.dp.toPx(), cap = StrokeCap.Round)
+                                )
+                            }
+                        }
+                        5 -> { // STARBURST: rotating spokes and sparkles
+                            val spin = waveOffset1 * 2.4f
+                            repeat(32) { i ->
+                                val angle = i * (2f * PI.toFloat() / 32f) + spin
+                                val inner = 42.dp.toPx()
+                                val outer = inner + (12.dp.toPx() + 25.dp.toPx() * abs(sin(i * 0.8f + waveOffset2 * 8f)))
+                                drawLine(
+                                    color = motionColors[i % motionColors.size].copy(alpha = 0.85f),
+                                    start = Offset(cx + cos(angle) * inner, cy + sin(angle) * inner * 0.62f),
+                                    end = Offset(cx + cos(angle) * outer, cy + sin(angle) * outer * 0.62f),
+                                    strokeWidth = if (i % 3 == 0) 2.4.dp.toPx() else 1.3.dp.toPx(),
+                                    cap = StrokeCap.Round
+                                )
+                                if (i % 2 == 0) {
+                                    drawCircle(
+                                        electricBlue.copy(alpha = 0.75f),
+                                        1.6.dp.toPx(),
+                                        Offset(cx + cos(angle) * (outer + 5.dp.toPx()), cy + sin(angle) * (outer + 5.dp.toPx()) * 0.62f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     // 7. Passive End Radiator Anodized Gradient Rings (Left & Right)
                     val ringBrush = Brush.linearGradient(
                         colors = listOf(
@@ -410,6 +532,26 @@ fun AcousticSpeakerVisualizer(
                     )
                 }
             }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 1.dp, bottom = 3.dp)
+            ) {
+                listOf("SONIC", "ORBIT", "FUNKY", "NEON", "AURORA", "BURST").forEachIndexed { index, label ->
+                    Box(
+                        modifier = Modifier.clip(RoundedCornerShape(10.dp))
+                            .background(if (animationStyle == index) themePrimary.copy(alpha = 0.18f) else Color.Transparent)
+                            .border(1.dp, if (animationStyle == index) themePrimary else Color.Transparent, RoundedCornerShape(10.dp))
+                            .padding(horizontal = 5.dp, vertical = 4.dp)
+                    ) {
+                        Text(label, style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold),
+                            color = if (animationStyle == index) themePrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+            Text("SWIPE TO CYCLE 6 BLUE-ACCENT ANIMATIONS", style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
+                color = themePrimary, modifier = Modifier.padding(bottom = 8.dp))
 
             // Live Transducer Pulse Meter Rings (3 dots: Mint, Orange, Rose)
             Row(
