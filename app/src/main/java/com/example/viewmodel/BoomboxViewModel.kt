@@ -1,0 +1,393 @@
+package com.example.viewmodel
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.data.AudioManagerHelper
+import com.example.data.BluetoothManagerHelper
+import com.example.data.DiscoveredSpeaker
+import com.example.data.StudioPreferencesRepository
+import com.example.model.ConnectionStatus
+import com.example.model.EqualizerPreset
+import com.example.model.FrequencyBand
+import com.example.model.MediaPlaybackState
+import com.example.model.SpeakerDevice
+import com.example.model.SpeakerInput
+import com.example.model.StudioEqualizerState
+import com.example.ui.theme.MotionPreference
+import com.example.ui.theme.StudioTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+data class SettingsState(
+    val volumeLimiterEnabled: Boolean = true,
+    val maxSafeVolumePercent: Int = 85,
+    val hapticFeedbackEnabled: Boolean = true
+)
+
+class BoomboxViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val audioHelper = AudioManagerHelper(application)
+    private val btHelper = BluetoothManagerHelper(application)
+    private val prefsRepo = StudioPreferencesRepository(application)
+
+    val activeTheme: StateFlow<StudioTheme> = prefsRepo.activeThemeFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, StudioTheme.SUNSET_GLOW)
+
+    val motionPreference: StateFlow<MotionPreference> = prefsRepo.motionPreferenceFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, MotionPreference.FULL)
+
+    private val _speakerState = MutableStateFlow(
+        SpeakerDevice(connectionStatus = ConnectionStatus.CONNECTED)
+    )
+    val speakerState: StateFlow<SpeakerDevice> = _speakerState.asStateFlow()
+
+    private val _mediaState = MutableStateFlow(
+        MediaPlaybackState(
+            volumePercent = calculateInitialVolumePercent(),
+            isPlaying = true
+        )
+    )
+    val mediaState: StateFlow<MediaPlaybackState> = _mediaState.asStateFlow()
+
+    private val _equalizerState = MutableStateFlow(StudioEqualizerState())
+    val equalizerState: StateFlow<StudioEqualizerState> = _equalizerState.asStateFlow()
+
+    private val _settingsState = MutableStateFlow(SettingsState())
+    val settingsState: StateFlow<SettingsState> = _settingsState.asStateFlow()
+
+    private val _isScanning = MutableStateFlow(false)
+    val isScanning: StateFlow<Boolean> = _isScanning.asStateFlow()
+
+    private val _discoveredDevices = MutableStateFlow<List<DiscoveredSpeaker>>(emptyList())
+    val discoveredDevices: StateFlow<List<DiscoveredSpeaker>> = _discoveredDevices.asStateFlow()
+
+    private val _userFeedbackMessage = MutableStateFlow<String?>(null)
+    val userFeedbackMessage: StateFlow<String?> = _userFeedbackMessage.asStateFlow()
+
+    init {
+        refreshPairedDevices()
+        startPlaybackPositionTicker()
+        observeStoredSettings()
+    }
+
+    private fun observeStoredSettings() {
+        viewModelScope.launch {
+            prefsRepo.volumeLimiterFlow.collect { limiter ->
+                _settingsState.update { it.copy(volumeLimiterEnabled = limiter) }
+            }
+        }
+        viewModelScope.launch {
+            prefsRepo.hapticsEnabledFlow.collect { haptics ->
+                _settingsState.update { it.copy(hapticFeedbackEnabled = haptics) }
+            }
+        }
+    }
+
+    private fun calculateInitialVolumePercent(): Int {
+        val current = audioHelper.getStreamMusicVolume()
+        val max = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
+        return ((current.toFloat() / max.toFloat()) * 100).toInt().coerceIn(0, 100)
+    }
+
+    private fun startPlaybackPositionTicker() {
+        viewModelScope.launch {
+            while (true) {
+                delay(1000)
+                if (_mediaState.value.isPlaying && _mediaState.value.isMediaSessionActive) {
+                    _mediaState.update { current ->
+                        val nextPos = (current.positionSeconds + 1) % (current.durationSeconds.coerceAtLeast(1))
+                        current.copy(positionSeconds = nextPos)
+                    }
+                }
+            }
+        }
+    }
+
+    // Media Controls
+    fun togglePlayPause() {
+        val newPlaying = !_mediaState.value.isPlaying
+        _mediaState.update { it.copy(isPlaying = newPlaying) }
+        audioHelper.togglePlayPause()
+    }
+
+    fun skipNextTrack() {
+        _mediaState.update {
+            it.copy(
+                positionSeconds = 0,
+                trackTitle = when (it.trackTitle) {
+                    "Midnight Bassline" -> "Electric Resonance"
+                    "Electric Resonance" -> "Acoustic Radiator Pulse"
+                    else -> "Midnight Bassline"
+                },
+                artistName = when (it.artistName) {
+                    "Acoustic Horizon" -> "Studio Master 5.4"
+                    else -> "Acoustic Horizon"
+                }
+            )
+        }
+        audioHelper.skipNext()
+    }
+
+    fun skipPreviousTrack() {
+        _mediaState.update {
+            it.copy(
+                positionSeconds = 0,
+                trackTitle = "Midnight Bassline",
+                artistName = "Acoustic Horizon"
+            )
+        }
+        audioHelper.skipPrevious()
+    }
+
+    fun setVolume(newPercent: Int) {
+        val limitedPercent = if (_settingsState.value.volumeLimiterEnabled) {
+            newPercent.coerceIn(0, _settingsState.value.maxSafeVolumePercent)
+        } else {
+            newPercent.coerceIn(0, 100)
+        }
+
+        _mediaState.update { it.copy(volumePercent = limitedPercent, isMuted = limitedPercent == 0) }
+
+        // Sync with Android system STREAM_MUSIC
+        val maxSteps = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
+        val targetStep = ((limitedPercent / 100f) * maxSteps).toInt()
+        audioHelper.setStreamMusicVolume(targetStep)
+    }
+
+    fun toggleMute() {
+        _mediaState.update { current ->
+            val nextMuted = !current.isMuted
+            val nextVol = if (nextMuted) 0 else 50
+            if (nextMuted) {
+                audioHelper.setStreamMusicVolume(0)
+            } else {
+                val maxSteps = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
+                audioHelper.setStreamMusicVolume(maxSteps / 2)
+            }
+            current.copy(isMuted = nextMuted, volumePercent = nextVol)
+        }
+    }
+
+    fun toggleEmptyMediaState() {
+        _mediaState.update { current ->
+            if (current.isMediaSessionActive) {
+                current.copy(
+                    isMediaSessionActive = false,
+                    trackTitle = null,
+                    artistName = null,
+                    albumName = null,
+                    isPlaying = false
+                )
+            } else {
+                current.copy(
+                    isMediaSessionActive = true,
+                    trackTitle = "Midnight Bassline",
+                    artistName = "Acoustic Horizon",
+                    albumName = "Studio Sessions Vol. 4",
+                    isPlaying = true
+                )
+            }
+        }
+    }
+
+    // Connection Controls
+    fun toggleConnection() {
+        val current = _speakerState.value.connectionStatus
+        if (current == ConnectionStatus.CONNECTED) {
+            _speakerState.update { it.copy(connectionStatus = ConnectionStatus.DISCONNECTED) }
+            showToastMessage("Disconnected from BOOMBOX4MINI")
+        } else {
+            reconnectSpeaker()
+        }
+    }
+
+    fun reconnectSpeaker() {
+        viewModelScope.launch {
+            _speakerState.update { it.copy(connectionStatus = ConnectionStatus.CONNECTING) }
+            delay(1200)
+            _speakerState.update { it.copy(connectionStatus = ConnectionStatus.CONNECTED) }
+            showToastMessage("Connected to BOOMBOX4MINI (A2DP / AVRCP)")
+        }
+    }
+
+    fun selectSpeakerInput(input: SpeakerInput) {
+        if (input.isPhysicalSwitch) {
+            showToastMessage("${input.title} requires physical mode button switch on BOOMBOX4MINI")
+        }
+        _speakerState.update { it.copy(currentInput = input) }
+    }
+
+    fun refreshPairedDevices() {
+        _discoveredDevices.value = btHelper.getPairedAudioDevices()
+    }
+
+    fun startDiscoveryScan() {
+        viewModelScope.launch {
+            _isScanning.value = true
+            delay(2000)
+            refreshPairedDevices()
+            _isScanning.value = false
+            showToastMessage("Scan complete: Discovered paired audio endpoints")
+        }
+    }
+
+    // Equalizer Controls
+    fun selectPreset(preset: EqualizerPreset) {
+        val newBands = when (preset) {
+            EqualizerPreset.BALANCED -> listOf(
+                FrequencyBand(0, "60 Hz", 0.0f),
+                FrequencyBand(1, "250 Hz", 0.0f),
+                FrequencyBand(2, "1 kHz", 0.0f),
+                FrequencyBand(3, "4 kHz", 0.0f),
+                FrequencyBand(4, "14 kHz", 0.0f)
+            )
+            EqualizerPreset.BASS_BOOST -> listOf(
+                FrequencyBand(0, "60 Hz", 7.5f),
+                FrequencyBand(1, "250 Hz", 4.0f),
+                FrequencyBand(2, "1 kHz", 0.0f),
+                FrequencyBand(3, "4 kHz", 1.0f),
+                FrequencyBand(4, "14 kHz", 2.0f)
+            )
+            EqualizerPreset.VOCAL -> listOf(
+                FrequencyBand(0, "60 Hz", -2.0f),
+                FrequencyBand(1, "250 Hz", 0.5f),
+                FrequencyBand(2, "1 kHz", 4.5f),
+                FrequencyBand(3, "4 kHz", 5.0f),
+                FrequencyBand(4, "14 kHz", 2.5f)
+            )
+            EqualizerPreset.CLUB -> listOf(
+                FrequencyBand(0, "60 Hz", 6.0f),
+                FrequencyBand(1, "250 Hz", 2.5f),
+                FrequencyBand(2, "1 kHz", -1.5f),
+                FrequencyBand(3, "4 kHz", 3.0f),
+                FrequencyBand(4, "14 kHz", 5.5f)
+            )
+            EqualizerPreset.CUSTOM -> _equalizerState.value.bands
+        }
+
+        val bass = when (preset) {
+            EqualizerPreset.BASS_BOOST -> 0.85f
+            EqualizerPreset.CLUB -> 0.70f
+            EqualizerPreset.BALANCED -> 0.50f
+            EqualizerPreset.VOCAL -> 0.35f
+            EqualizerPreset.CUSTOM -> _equalizerState.value.bassLevel
+        }
+
+        val treble = when (preset) {
+            EqualizerPreset.VOCAL -> 0.75f
+            EqualizerPreset.CLUB -> 0.65f
+            EqualizerPreset.BALANCED -> 0.50f
+            EqualizerPreset.BASS_BOOST -> 0.45f
+            EqualizerPreset.CUSTOM -> _equalizerState.value.trebleLevel
+        }
+
+        _equalizerState.update {
+            it.copy(
+                preset = preset,
+                bands = newBands,
+                bassLevel = bass,
+                trebleLevel = treble
+            )
+        }
+    }
+
+    fun updateBandGain(bandIndex: Int, newGain: Float) {
+        val updated = _equalizerState.value.bands.map {
+            if (it.bandIndex == bandIndex) it.copy(gainDb = newGain.coerceIn(-12f, 12f)) else it
+        }
+        _equalizerState.update {
+            it.copy(
+                preset = EqualizerPreset.CUSTOM,
+                bands = updated
+            )
+        }
+    }
+
+    fun updateBassLevel(level: Float) {
+        _equalizerState.update {
+            it.copy(
+                preset = EqualizerPreset.CUSTOM,
+                bassLevel = level.coerceIn(0f, 1f)
+            )
+        }
+    }
+
+    fun updateTrebleLevel(level: Float) {
+        _equalizerState.update {
+            it.copy(
+                preset = EqualizerPreset.CUSTOM,
+                trebleLevel = level.coerceIn(0f, 1f)
+            )
+        }
+    }
+
+    fun updateBassBoost(amount: Float) {
+        _equalizerState.update {
+            it.copy(
+                preset = EqualizerPreset.CUSTOM,
+                bassBoostAmount = amount.coerceIn(0f, 1f)
+            )
+        }
+    }
+
+    fun updateVirtualizer(amount: Float) {
+        _equalizerState.update {
+            it.copy(
+                preset = EqualizerPreset.CUSTOM,
+                virtualizerAmount = amount.coerceIn(0f, 1f)
+            )
+        }
+    }
+
+    fun resetEqualizerFlat() {
+        selectPreset(EqualizerPreset.BALANCED)
+        showToastMessage("Equalizer curve reset to 0 dB Studio Flat")
+    }
+
+    // Settings & Theme
+    fun selectTheme(theme: StudioTheme) {
+        viewModelScope.launch {
+            prefsRepo.setTheme(theme)
+            showToastMessage("Theme applied: ${theme.title}")
+        }
+    }
+
+    fun selectMotionPreference(preference: MotionPreference) {
+        viewModelScope.launch {
+            prefsRepo.setMotionPreference(preference)
+            showToastMessage("Motion: ${preference.title}")
+        }
+    }
+
+    fun toggleVolumeLimiter(enabled: Boolean) {
+        viewModelScope.launch {
+            prefsRepo.setVolumeLimiter(enabled)
+            _settingsState.update { it.copy(volumeLimiterEnabled = enabled) }
+            if (enabled && _mediaState.value.volumePercent > _settingsState.value.maxSafeVolumePercent) {
+                setVolume(_settingsState.value.maxSafeVolumePercent)
+            }
+        }
+    }
+
+    fun toggleHaptic(enabled: Boolean) {
+        viewModelScope.launch {
+            prefsRepo.setHapticsEnabled(enabled)
+            _settingsState.update { it.copy(hapticFeedbackEnabled = enabled) }
+        }
+    }
+
+    fun clearFeedbackMessage() {
+        _userFeedbackMessage.value = null
+    }
+
+    private fun showToastMessage(msg: String) {
+        _userFeedbackMessage.value = msg
+    }
+}

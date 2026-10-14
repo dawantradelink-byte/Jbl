@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Top Heavy-Duty Carrying Handle -->
+    <path
+        android:pathData="M37,42 C37,33 43,30 54,30 C65,30 71,33 71,42"
+        android:strokeWidth="4"
+        android:strokeColor="#4A332D"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M42,39 C44,34 48,32 54,32 C60,32 64,34 66,39"
+        android:strokeWidth="1.8"
+        android:strokeColor="#FF7E5F"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Speaker Cylindrical Main Body -->
+    <path
+        android:pathData="M27,45 L81,45 A10,10 0 0,1 91,55 L91,61 A10,10 0 0,1 81,71 L27,71 A10,10 0 0,1 17,61 L17,55 A10,10 0 0,1 27,45 Z"
+        android:fillColor="#352420"
+        android:strokeWidth="1.5"
+        android:strokeColor="#523933" />
+
+    <!-- Left Passive Bass Radiator Cap -->
+    <path
+        android:pathData="M17,49 C21,49 22,53 22,58 C22,63 21,67 17,67"
+        android:strokeWidth="2.5"
+        android:strokeColor="#FEB47B"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Right Passive Bass Radiator Cap -->
+    <path
+        android:pathData="M91,49 C87,49 86,53 86,58 C86,63 87,67 91,67"
+        android:strokeWidth="2.5"
+        android:strokeColor="#FEB47B"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Central Acoustic Grille & Visualizer Bars -->
+    <path
+        android:pathData="M33,58 L33,58"
+        android:strokeWidth="3.2"
+        android:strokeColor="#E06548"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M39,54 L39,62"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FF7E5F"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M45,50 L45,66"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FEB47B"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M51,48 L51,68"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FF7E5F"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M57,48 L57,68"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FF7E5F"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M63,50 L63,66"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FEB47B"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M69,54 L69,62"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FF7E5F"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M75,58 L75,58"
+        android:strokeWidth="3.2"
+        android:strokeColor="#E06548"
+        android:strokeLineCap="round" />
+
+    <!-- Front Control Bar Accent & Power Dot -->
+    <path
+        android:pathData="M46,45 L62,45"
+        android:strokeWidth="2"
+        android:strokeColor="#66463F"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M54,45 L54,45"
+        android:strokeWidth="2"
+        android:strokeColor="#FEB47B"
+        android:strokeLineCap="round" />
+
+    <!-- Speaker Bass Acoustic Cones (Bottom Reflection) -->
+    <path
+        android:pathData="M38,76 C48,79 60,79 70,76"
+        android:strokeWidth="2"
+        android:strokeColor="#2C1E1B"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+</vector>

@@ -1,0 +1,6 @@
+{
+  "name": "BOOMBOX Control Studio",
+  "description": "Premium Bluetooth audio management and studio controls for BOOMBOX4MINI speaker",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
