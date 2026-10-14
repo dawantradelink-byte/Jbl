@@ -7,6 +7,7 @@ import com.example.data.AudioManagerHelper
 import com.example.data.BluetoothManagerHelper
 import com.example.data.DiscoveredSpeaker
 import com.example.data.StudioPreferencesRepository
+import com.example.data.SystemEqualizerHelper
 import com.example.model.ConnectionStatus
 import com.example.model.EqualizerPreset
 import com.example.model.FrequencyBand
@@ -36,6 +37,9 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     private val audioHelper = AudioManagerHelper(application)
     private val btHelper = BluetoothManagerHelper(application)
     private val prefsRepo = StudioPreferencesRepository(application)
+    private val systemEqualizer = SystemEqualizerHelper()
+    private val _audioEffectAvailable = MutableStateFlow(systemEqualizer.isAvailable)
+    val audioEffectAvailable: StateFlow<Boolean> = _audioEffectAvailable.asStateFlow()
 
     val activeTheme: StateFlow<StudioTheme> = prefsRepo.activeThemeFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, StudioTheme.SUNSET_GLOW)
@@ -75,6 +79,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         refreshPairedDevices()
         startPlaybackPositionTicker()
         observeStoredSettings()
+        applyCurrentEqualizer()
     }
 
     private fun observeStoredSettings() {
@@ -286,6 +291,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
                 trebleLevel = treble
             )
         }
+        applyCurrentEqualizer()
     }
 
     fun updateBandGain(bandIndex: Int, newGain: Float) {
@@ -298,6 +304,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
                 bands = updated
             )
         }
+        applyCurrentEqualizer()
     }
 
     fun updateBassLevel(level: Float) {
@@ -307,6 +314,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
                 bassLevel = level.coerceIn(0f, 1f)
             )
         }
+        applyCurrentEqualizer()
     }
 
     fun updateTrebleLevel(level: Float) {
@@ -316,6 +324,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
                 trebleLevel = level.coerceIn(0f, 1f)
             )
         }
+        applyCurrentEqualizer()
     }
 
     fun updateBassBoost(amount: Float) {
@@ -338,7 +347,30 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
 
     fun resetEqualizerFlat() {
         selectPreset(EqualizerPreset.BALANCED)
-        showToastMessage("Equalizer curve reset to 0 dB Studio Flat")
+        showToastMessage(
+            if (_audioEffectAvailable.value) "System output equalizer reset to flat."
+            else "Equalizer is unavailable on this device; no audio changes were applied."
+        )
+    }
+
+    private fun applyCurrentEqualizer() {
+        val state = _equalizerState.value
+        val bassOffset = (state.bassLevel - 0.5f) * 12f
+        val trebleOffset = (state.trebleLevel - 0.5f) * 12f
+        val gains = state.bands.mapIndexed { index, band ->
+            val toneOffset = when (index) {
+                0, 1 -> bassOffset
+                3, 4 -> trebleOffset
+                else -> 0f
+            }
+            (band.gainDb + toneOffset).coerceIn(-12f, 12f)
+        }
+        _audioEffectAvailable.value = systemEqualizer.applyFiveBandCurve(gains)
+    }
+
+    override fun onCleared() {
+        systemEqualizer.release()
+        super.onCleared()
     }
 
     // Settings & Theme
