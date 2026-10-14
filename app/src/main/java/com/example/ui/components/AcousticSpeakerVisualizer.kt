@@ -67,6 +67,13 @@ fun AcousticSpeakerVisualizer(
     audioEffectAvailable: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val themePrimary = MaterialTheme.colorScheme.primary
+    val themeSecondary = MaterialTheme.colorScheme.secondary
+    val themeTertiary = MaterialTheme.colorScheme.tertiary
+    val themePrimaryContainer = MaterialTheme.colorScheme.primaryContainer
+    val themeSecondaryContainer = MaterialTheme.colorScheme.secondaryContainer
+    val themeTertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
+
     val infiniteTransition = rememberInfiniteTransition(label = "audioAcoustics")
 
     // Passive bass radiator physical excursion pulse
@@ -137,7 +144,7 @@ fun AcousticSpeakerVisualizer(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
                         .background(SurfaceContainerHigh.copy(alpha = 0.80f))
-                        .border(1.dp, PrimaryContainerOceanic.copy(alpha = 0.50f), RoundedCornerShape(16.dp))
+                        .border(1.dp, themePrimary.copy(alpha = 0.50f), RoundedCornerShape(16.dp))
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -145,7 +152,7 @@ fun AcousticSpeakerVisualizer(
                             modifier = Modifier
                                 .size(7.dp)
                                 .clip(CircleShape)
-                                .background(if (connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else TertiaryCrimsonRose)
+                                .background(if (connectionStatus == ConnectionStatus.CONNECTED) themePrimary else themeTertiary)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -155,7 +162,7 @@ fun AcousticSpeakerVisualizer(
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp
                             ),
-                            color = if (connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (connectionStatus == ConnectionStatus.CONNECTED) themePrimary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -168,7 +175,7 @@ fun AcousticSpeakerVisualizer(
                     Icon(
                         imageVector = Icons.Default.GraphicEq,
                         contentDescription = "System audio output",
-                        tint = if (connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = if (connectionStatus == ConnectionStatus.CONNECTED) themePrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(15.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -208,7 +215,7 @@ fun AcousticSpeakerVisualizer(
                         drawCircle(
                             brush = Brush.radialGradient(
                                 colors = listOf(
-                                    SecondarySunsetContainer.copy(alpha = 0.28f * ambientGlowIntensity),
+                                    themeSecondary.copy(alpha = 0.28f * ambientGlowIntensity),
                                     Color.Transparent
                                 ),
                                 center = Offset(cx - 70.dp.toPx(), cy - 20.dp.toPx()),
@@ -221,7 +228,7 @@ fun AcousticSpeakerVisualizer(
                         drawCircle(
                             brush = Brush.radialGradient(
                                 colors = listOf(
-                                    TertiaryCrimsonContainer.copy(alpha = 0.30f * ambientGlowIntensity),
+                                    themeTertiary.copy(alpha = 0.30f * ambientGlowIntensity),
                                     Color.Transparent
                                 ),
                                 center = Offset(cx + 70.dp.toPx(), cy + 20.dp.toPx()),
@@ -298,7 +305,7 @@ fun AcousticSpeakerVisualizer(
                             colors = listOf(
                                 Color(0xFF1A1C1D),
                                 Color(0xFF282A2B),
-                                PrimaryContainerOceanic.copy(alpha = 0.40f)
+                                themePrimary.copy(alpha = 0.40f)
                             ),
                             center = Offset(leftWooferX, cy),
                             radius = wooferRadius
@@ -318,7 +325,7 @@ fun AcousticSpeakerVisualizer(
                         center = Offset(leftWooferX, cy)
                     )
                     drawCircle(
-                        color = PrimaryContainerOceanic.copy(alpha = 0.65f),
+                        color = themePrimary.copy(alpha = 0.65f),
                         radius = 7.dp.toPx(),
                         center = Offset(leftWooferX, cy)
                     )
@@ -332,17 +339,21 @@ fun AcousticSpeakerVisualizer(
                         size = Size(logoW, logoH),
                         cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
                     )
-                    // Play triangle glyph
-                    val triPath = Path().apply {
-                        moveTo(cx - 3.dp.toPx(), cy - 5.dp.toPx())
-                        lineTo(cx + 5.dp.toPx(), cy)
-                        lineTo(cx - 3.dp.toPx(), cy + 5.dp.toPx())
-                        close()
+                    // Three equalizer bars instead of a play glyph: this speaker illustration is decorative,
+                    // not a clickable media-control button.
+                    val barWidth = 2.dp.toPx()
+                    val barGap = 2.dp.toPx()
+                    val barHeights = listOf(6.dp.toPx(), 12.dp.toPx(), 8.dp.toPx())
+                    val barsWidth = barWidth * 3f + barGap * 2f
+                    barHeights.forEachIndexed { index, barHeight ->
+                        val x = cx - barsWidth / 2f + index * (barWidth + barGap)
+                        drawRoundRect(
+                            color = themePrimary,
+                            topLeft = Offset(x, cy - barHeight / 2f),
+                            size = Size(barWidth, barHeight),
+                            cornerRadius = CornerRadius(barWidth, barWidth)
+                        )
                     }
-                    drawPath(
-                        path = triPath,
-                        color = PrimaryMint
-                    )
 
                     // 6. Right Woofer Driver (Sunset Orange Accent)
                     val rightWooferX = cx + bodyWidth * 0.28f
@@ -351,7 +362,7 @@ fun AcousticSpeakerVisualizer(
                             colors = listOf(
                                 Color(0xFF1A1C1D),
                                 Color(0xFF282A2B),
-                                SecondarySunsetOrange.copy(alpha = 0.35f)
+                                themeSecondary.copy(alpha = 0.35f)
                             ),
                             center = Offset(rightWooferX, cy),
                             radius = wooferRadius
@@ -371,7 +382,7 @@ fun AcousticSpeakerVisualizer(
                         center = Offset(rightWooferX, cy)
                     )
                     drawCircle(
-                        color = SecondarySunsetContainer.copy(alpha = 0.65f),
+                        color = themeSecondary.copy(alpha = 0.65f),
                         radius = 7.dp.toPx(),
                         center = Offset(rightWooferX, cy)
                     )
@@ -379,9 +390,9 @@ fun AcousticSpeakerVisualizer(
                     // 7. Passive End Radiator Anodized Gradient Rings (Left & Right)
                     val ringBrush = Brush.linearGradient(
                         colors = listOf(
-                            PrimaryContainerOceanic,
-                            SecondarySunsetOrange,
-                            TertiaryCrimsonContainer
+                            themePrimary,
+                            themeSecondary,
+                            themeTertiary
                         )
                     )
                     val capH = (bodyHeight * 0.65f) * bassRadiatorPulse
@@ -410,19 +421,19 @@ fun AcousticSpeakerVisualizer(
                     modifier = Modifier
                         .size(6.dp)
                         .clip(CircleShape)
-                        .background(PrimaryMint)
+                        .background(themePrimary)
                 )
                 Box(
                     modifier = Modifier
                         .size(6.dp)
                         .clip(CircleShape)
-                        .background(SecondarySunsetOrange)
+                        .background(themeSecondary)
                 )
                 Box(
                     modifier = Modifier
                         .size(6.dp)
                         .clip(CircleShape)
-                        .background(TertiaryCrimsonRose)
+                        .background(themeTertiary)
                 )
             }
 
@@ -448,7 +459,7 @@ fun AcousticSpeakerVisualizer(
                         Icon(
                             imageVector = Icons.Default.GraphicEq,
                             contentDescription = null,
-                            tint = SecondarySunsetOrange,
+                            tint = themeSecondary,
                             modifier = Modifier.size(12.dp)
                         )
                         Spacer(modifier = Modifier.width(3.dp))
@@ -465,7 +476,7 @@ fun AcousticSpeakerVisualizer(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         ),
-                        color = SecondarySunsetOrange
+                        color = themeSecondary
                     )
                 }
 
@@ -482,7 +493,7 @@ fun AcousticSpeakerVisualizer(
                         Icon(
                             imageVector = Icons.Default.SpeakerGroup,
                             contentDescription = null,
-                            tint = PrimaryMint,
+                            tint = themePrimary,
                             modifier = Modifier.size(12.dp)
                         )
                         Spacer(modifier = Modifier.width(3.dp))
@@ -499,7 +510,7 @@ fun AcousticSpeakerVisualizer(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         ),
-                        color = if (connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else TertiaryCrimsonRose
+                        color = if (connectionStatus == ConnectionStatus.CONNECTED) themePrimary else themeTertiary
                     )
                 }
 
@@ -516,7 +527,7 @@ fun AcousticSpeakerVisualizer(
                         Icon(
                             imageVector = Icons.Default.Memory,
                             contentDescription = null,
-                            tint = TertiaryCrimsonRose,
+                            tint = themeTertiary,
                             modifier = Modifier.size(12.dp)
                         )
                         Spacer(modifier = Modifier.width(3.dp))
@@ -533,7 +544,7 @@ fun AcousticSpeakerVisualizer(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         ),
-                        color = TertiaryCrimsonRose
+                        color = themeTertiary
                     )
                 }
             }
