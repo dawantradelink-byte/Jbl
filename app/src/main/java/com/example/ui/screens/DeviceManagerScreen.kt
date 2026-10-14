@@ -104,12 +104,7 @@ fun DeviceManagerScreen(
                 context,
                 Manifest.permission.BLUETOOTH_CONNECT
             ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        val scanGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        if (connectGranted && scanGranted) {
+        if (connectGranted) {
             permissionDeniedState = false
             viewModel.refreshBluetoothDevices()
         } else {
@@ -435,10 +430,7 @@ fun DeviceManagerScreen(
                 onClick = {
                     haptics.click()
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        val required = arrayOf(
-                            Manifest.permission.BLUETOOTH_CONNECT,
-                            Manifest.permission.BLUETOOTH_SCAN
-                        )
+                        val required = arrayOf(Manifest.permission.BLUETOOTH_CONNECT)
                         val missing = required.filter { permission ->
                             ContextCompat.checkSelfPermission(
                                 context,
