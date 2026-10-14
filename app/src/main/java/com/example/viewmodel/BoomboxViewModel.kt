@@ -105,7 +105,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         }
 
         if (limitedPercent > 0) lastNonMutedVolumePercent = limitedPercent
-        _mediaState.update { it.copy(volumePercent = limitedPercent, isMuted = limitedPercent == 0) }
+        _audioOutputState.update { it.copy(volumePercent = limitedPercent, isMuted = limitedPercent == 0) }
 
         // Sync with Android system STREAM_MUSIC
         val maxSteps = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
@@ -114,7 +114,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun toggleMute() {
-        val current = _mediaState.value
+        val current = _audioOutputState.value
         val nextVolume = if (current.isMuted) lastNonMutedVolumePercent.coerceIn(1, 100) else {
             lastNonMutedVolumePercent = current.volumePercent.coerceAtLeast(1)
             0
@@ -122,7 +122,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         val maxSteps = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
         val targetStep = ((nextVolume / 100f) * maxSteps).toInt().coerceIn(0, maxSteps)
         audioHelper.setStreamMusicVolume(targetStep)
-        _mediaState.update { it.copy(isMuted = nextVolume == 0, volumePercent = nextVolume) }
+        _audioOutputState.update { it.copy(isMuted = nextVolume == 0, volumePercent = nextVolume) }
     }
 
     // Connection state is refreshed from Android's real A2DP profile state in refreshPairedDevices().
@@ -323,7 +323,7 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             prefsRepo.setVolumeLimiter(enabled)
             _settingsState.update { it.copy(volumeLimiterEnabled = enabled) }
-            if (enabled && _mediaState.value.volumePercent > _settingsState.value.maxSafeVolumePercent) {
+            if (enabled && _audioOutputState.value.volumePercent > _settingsState.value.maxSafeVolumePercent) {
                 setVolume(_settingsState.value.maxSafeVolumePercent)
             }
         }
