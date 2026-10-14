@@ -67,9 +67,6 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     private val _settingsState = MutableStateFlow(SettingsState())
     val settingsState: StateFlow<SettingsState> = _settingsState.asStateFlow()
 
-    private val _isScanning = MutableStateFlow(false)
-    val isScanning: StateFlow<Boolean> = _isScanning.asStateFlow()
-
     private val _discoveredDevices = MutableStateFlow<List<DiscoveredSpeaker>>(emptyList())
     val discoveredDevices: StateFlow<List<DiscoveredSpeaker>> = _discoveredDevices.asStateFlow()
 
@@ -190,9 +187,9 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun startDiscoveryScan() {
+    fun refreshBluetoothDevices() {
         refreshPairedDevices()
-        showToastMessage("Paired Bluetooth devices refreshed.")
+        showToastMessage("Paired Bluetooth devices and A2DP status refreshed.")
     }
 
     // Equalizer Controls
