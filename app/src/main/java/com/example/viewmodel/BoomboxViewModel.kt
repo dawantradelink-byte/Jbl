@@ -224,13 +224,8 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun startDiscoveryScan() {
-        viewModelScope.launch {
-            _isScanning.value = true
-            delay(2000)
-            refreshPairedDevices()
-            _isScanning.value = false
-            showToastMessage("Scan complete: Discovered paired audio endpoints")
-        }
+        refreshPairedDevices()
+        showToastMessage("Paired Bluetooth devices refreshed.")
     }
 
     // Equalizer Controls
