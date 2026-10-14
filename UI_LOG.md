@@ -72,3 +72,13 @@ Updated: 2026-10-14
 - Swipe left/right on the speaker illustration to change effects. The active style is marked in blue; a compact label row explains the gesture.
 - The motion is Compose/Canvas animation and does not depend on a Motorola-only API. The visual effects are intended to run across supported Android versions, including Android 16 and 17; actual rendering/performance still needs device verification.
 - Live sound FFT remains a separate optional visualizer capability. The speaker hero animations are ambient effects, not a claim that audio is currently playing.
+
+
+## Speaker hero animation redesign — 2026-10-14
+
+- Added six swipe-selectable animation modes to the blue-marked speaker hero: Sonic Pulse, Orbit, Funky Spectrum, Neon Scanner, Aurora Flow, and Starburst.
+- Added electric-blue/neon-blue as signature accents with expanding rings, orbiting particles, moving spectrum bars, a scanner beam, layered ribbons, and radial sparkles.
+- Increased the gesture cycle from five to six styles and updated the on-screen labels/instruction.
+- Effects are Canvas-based Compose animations and do not require a Motorola-specific API. They are intended to run on Android 16/17 as well as other supported Android versions, subject to normal device rendering performance.
+- These hero effects are ambient animation, not claims of live sound capture. Live output FFT remains a separate, opt-in visualizer feature.
+- CI verification for this latest commit is pending; no physical device test is claimed.
