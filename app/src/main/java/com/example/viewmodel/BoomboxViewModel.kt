@@ -53,12 +53,11 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     val speakerState: StateFlow<SpeakerDevice> = _speakerState.asStateFlow()
 
     private val _audioOutputState = MutableStateFlow(
-        MediaPlaybackState(
+        AudioOutputState(
             volumePercent = calculateInitialVolumePercent(),
-            isPlaying = false
         )
     )
-    val audioOutputState: StateFlow<AudioOutputState> = _mediaState.asStateFlow()
+    val audioOutputState: StateFlow<AudioOutputState> = _audioOutputState.asStateFlow()
     private var lastNonMutedVolumePercent: Int = _mediaState.value.volumePercent.coerceAtLeast(1)
 
     private val _equalizerState = MutableStateFlow(StudioEqualizerState())
