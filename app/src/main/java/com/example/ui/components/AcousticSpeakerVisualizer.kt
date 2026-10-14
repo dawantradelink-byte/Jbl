@@ -25,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.SpeakerGroup
-import androidx.compose.material.icons.filled.SurroundSound
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -64,7 +63,6 @@ import com.example.ui.theme.TertiaryCrimsonRose
 fun AcousticSpeakerVisualizer(
     speakerName: String,
     connectionStatus: ConnectionStatus,
-    isPlaying: Boolean,
     volumePercent: Int,
     audioEffectAvailable: Boolean,
     modifier: Modifier = Modifier
@@ -74,7 +72,7 @@ fun AcousticSpeakerVisualizer(
     // Passive bass radiator physical excursion pulse
     val bassRadiatorPulse by infiniteTransition.animateFloat(
         initialValue = 0.94f,
-        targetValue = if (isPlaying && connectionStatus == ConnectionStatus.CONNECTED) 1.12f else 1.0f,
+        targetValue = if (connectionStatus == ConnectionStatus.CONNECTED) 1.06f else 1.0f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 420, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -118,7 +116,7 @@ fun AcousticSpeakerVisualizer(
             .fillMaxWidth()
             .testTag("acoustic_speaker_visualizer")
             .semantics {
-                contentDescription = "$speakerName, status: ${connectionStatus.name}, playback: ${if (isPlaying) "active" else "idle"}"
+                contentDescription = "$speakerName, status: ${connectionStatus.name}"
             },
         surfaceAlpha = 0.70f
     ) {
@@ -128,7 +126,7 @@ fun AcousticSpeakerVisualizer(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Status Header Badge: Connected • BT 5.4 HD Audio + 48kHz Surround
+            // Status Header Badge: real Android A2DP state
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -162,13 +160,13 @@ fun AcousticSpeakerVisualizer(
                     }
                 }
 
-                // 48kHz surround sound badge
+                // System audio output badge
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(end = 4.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.SurroundSound,
+                        imageVector = Icons.Default.GraphicEq,
                         contentDescription = "System audio output",
                         tint = PrimaryMint,
                         modifier = Modifier.size(15.dp)
@@ -437,7 +435,7 @@ fun AcousticSpeakerVisualizer(
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Metric 1: BASS (+6 dB BOOST in Sunset Orange)
+                // Metric 1: Android system volume
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -471,7 +469,7 @@ fun AcousticSpeakerVisualizer(
                     )
                 }
 
-                // Metric 2: STAGE (360° STEREO in Oceanic Mint)
+                // Metric 2: Android-reported audio route
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -501,11 +499,11 @@ fun AcousticSpeakerVisualizer(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         ),
-                        color = PrimaryMint
+                        color = if (connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else TertiaryCrimsonRose
                     )
                 }
 
-                // Metric 3: DSP CORE (ACTIVE 64B in Crimson Rose)
+                // Metric 3: phone-side EQ availability
                 Column(
                     modifier = Modifier
                         .weight(1f)
