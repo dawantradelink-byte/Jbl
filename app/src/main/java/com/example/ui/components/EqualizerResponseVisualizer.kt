@@ -70,6 +70,7 @@ fun EqualizerResponseVisualizer(
     val secondary = MaterialTheme.colorScheme.secondary
     val surface = MaterialTheme.colorScheme.surface
     val curveColor = MaterialTheme.colorScheme.onSurface
+    val secondaryTextColor = MaterialTheme.colorScheme.onSurfaceVariant
     val outline = OutlineVariantColor.copy(alpha = 0.48f)
 
     GlassCard(
@@ -212,7 +213,7 @@ fun EqualizerResponseVisualizer(
                     Text(
                         text = label,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = curveColorVariant
+                        color = secondaryTextColor
                     )
                 }
             }
