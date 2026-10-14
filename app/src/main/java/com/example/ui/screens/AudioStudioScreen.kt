@@ -135,7 +135,7 @@ fun AudioStudioScreen(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "PARAMETRIC EQUALIZER & DSP",
+                    text = "ANDROID SYSTEM OUTPUT EQ",
                     style = MaterialTheme.typography.labelSmall.copy(
                         letterSpacing = 1.5.sp,
                         fontWeight = FontWeight.Bold
