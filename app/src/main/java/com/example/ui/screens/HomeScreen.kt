@@ -52,7 +52,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.model.EqualizerPreset
 import com.example.ui.components.AcousticSpeakerVisualizer
 import com.example.ui.components.GlassCard
-import com.example.ui.components.MediaPlaybackControls
 import com.example.ui.components.TactileVolumeSlider
 import com.example.ui.theme.PrimaryContainerOceanic
 import com.example.ui.theme.PrimaryMint
@@ -76,7 +75,7 @@ fun HomeScreen(
 ) {
     val haptics = LocalStudioHaptics.current
     val speakerState by viewModel.speakerState.collectAsStateWithLifecycle()
-    val mediaState by viewModel.mediaState.collectAsStateWithLifecycle()
+    val audioOutputState by viewModel.audioOutputState.collectAsStateWithLifecycle()
     val equalizerState by viewModel.equalizerState.collectAsStateWithLifecycle()
     val audioEffectAvailable by viewModel.audioEffectAvailable.collectAsStateWithLifecycle()
 
@@ -200,8 +199,8 @@ fun HomeScreen(
         AcousticSpeakerVisualizer(
             speakerName = speakerState.name,
             connectionStatus = speakerState.connectionStatus,
-            isPlaying = mediaState.isPlaying && mediaState.isMediaSessionActive,
-            volumePercent = mediaState.volumePercent,
+            isPlaying = false,
+            volumePercent = audioOutputState.volumePercent,
             audioEffectAvailable = audioEffectAvailable
         )
 
@@ -241,7 +240,7 @@ fun HomeScreen(
         // Master Gain & Dynamic Limiter
         TactileVolumeSlider(
             volumePercent = mediaState.volumePercent,
-            isMuted = mediaState.isMuted,
+            isMuted = audioOutputState.isMuted,
             onVolumeChanged = { viewModel.setVolume(it) },
             onMuteToggled = { viewModel.toggleMute() }
         )
