@@ -158,10 +158,10 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun selectSpeakerInput(input: SpeakerInput) {
-        if (input.isPhysicalSwitch) {
-            showToastMessage("${input.title} requires physical mode button switch on BOOMBOX4MINI")
-        }
-        _speakerState.update { it.copy(currentInput = input) }
+        showToastMessage(
+            "${input.title} cannot be switched from this app. Use the speaker's physical mode button; " +
+                "the displayed input is not changed unless the hardware reports it."
+        )
     }
 
     fun refreshPairedDevices() {
