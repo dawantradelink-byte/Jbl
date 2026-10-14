@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -27,6 +28,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -184,8 +187,35 @@ fun TactileVolumeSlider(
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(36.dp)
+                    .height(42.dp)
                     .testTag("volume_slider_container")
+                    .pointerInput(constraints.maxWidth) {
+                        detectTapGestures { tap ->
+                            val fraction = (tap.x / size.width.toFloat()).coerceIn(0f, 1f)
+                            val newVolume = (fraction * 100f).toInt()
+                            hapticTracker.onValueChanged(newVolume.toFloat())
+                            currentOnVolumeChanged(newVolume)
+                        }
+                    }
+                    .pointerInput(constraints.maxWidth) {
+                        detectDragGestures(
+                            onDragStart = { position ->
+                                dragOffset = position.x
+                                val newVolume = ((position.x / size.width.toFloat()).coerceIn(0f, 1f) * 100f).toInt()
+                                hapticTracker.onValueChanged(newVolume.toFloat())
+                                currentOnVolumeChanged(newVolume)
+                            },
+                            onDrag = { change, amount ->
+                                change.consume()
+                                dragOffset = (dragOffset + amount.x).coerceIn(0f, size.width.toFloat())
+                                val newVolume = ((dragOffset / size.width.toFloat()).coerceIn(0f, 1f) * 100f).toInt()
+                                if (newVolume != currentVolume) {
+                                    hapticTracker.onValueChanged(newVolume.toFloat())
+                                    currentOnVolumeChanged(newVolume)
+                                }
+                            }
+                        )
+                    }
                     .semantics {
                         role = Role.Button
                         contentDescription = "Master Volume Gain"
@@ -225,37 +255,29 @@ fun TactileVolumeSlider(
                 // Drag gesture detector and precision thumb
                 var dragOffset by remember { mutableFloatStateOf(0f) }
 
-                val thumbOffset = ((effectiveFraction * totalWidthPx) - 8.dp.value).coerceIn(0f, totalWidthPx - 16.dp.value)
+                val targetThumbOffset = (maxWidth * effectiveFraction - 12.dp)
+                    .coerceIn(0.dp, (maxWidth - 24.dp).coerceAtLeast(0.dp))
+                val thumbOffset by animateDpAsState(
+                    targetValue = targetThumbOffset,
+                    animationSpec = spring(dampingRatio = 0.82f, stiffness = 650f),
+                    label = "volumeKnobPosition"
+                )
 
                 Box(
                     modifier = Modifier
-                        .offset(x = with(density) { thumbOffset.toDp() })
-                        .size(width = 16.dp, height = 24.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xFFE2E2E3))
-                        .border(1.dp, SurfaceContainerLowest, RoundedCornerShape(4.dp))
-                        .shadow(10.dp, RoundedCornerShape(4.dp), ambientColor = MaterialTheme.colorScheme.primary, spotColor = MaterialTheme.colorScheme.primary)
-                        .pointerInput(totalWidthPx) {
-                            detectDragGestures(
-                                onDragStart = { offset ->
-                                    dragOffset = offset.x
-                                    val newFraction = (offset.x / totalWidthPx).coerceIn(0f, 1f)
-                                    val newVol = (newFraction * 100).toInt()
-                                    hapticTracker.onValueChanged(newVol.toFloat())
-                                    currentOnVolumeChanged(newVol)
-                                },
-                                onDrag = { change, dragAmount ->
-                                    change.consume()
-                                    dragOffset += dragAmount.x
-                                    val newFraction = (dragOffset / totalWidthPx).coerceIn(0f, 1f)
-                                    val newVol = (newFraction * 100).toInt()
-                                    if (newVol != currentVolume) {
-                                        hapticTracker.onValueChanged(newVol.toFloat())
-                                        currentOnVolumeChanged(newVol)
-                                    }
-                                }
+                        .offset(x = thumbOffset)
+                        .size(width = 24.dp, height = 30.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.secondary
+                                )
                             )
-                        },
+                        )
+                        .border(2.dp, MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f), CircleShape)
+                        .shadow(12.dp, CircleShape, ambientColor = MaterialTheme.colorScheme.primary, spotColor = MaterialTheme.colorScheme.primary),
                     contentAlignment = Alignment.Center
                 ) {
                     // Center grip notch
@@ -264,7 +286,7 @@ fun TactileVolumeSlider(
                             .width(2.dp)
                             .height(12.dp)
                             .clip(RoundedCornerShape(1.dp))
-                            .background(Color(0xFF282A2B))
+                            .background(MaterialTheme.colorScheme.onPrimary)
                     )
                 }
             }
