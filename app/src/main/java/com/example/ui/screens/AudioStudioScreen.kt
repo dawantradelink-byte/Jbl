@@ -451,6 +451,7 @@ fun AudioStudioScreen(
                             viewModel.updateTrebleLevel(it)
                         },
                         valueRange = 0f..1f,
+                        enabled = audioEffectAvailable,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("slider_master_treble")
@@ -504,10 +505,12 @@ fun AudioStudioScreen(
                         },
                     surfaceAlpha = if (isSelected) 0.80f else 0.40f,
                     borderAlpha = if (isSelected) 0.70f else 0.20f,
-                    onClick = {
-                        haptics.click()
-                        viewModel.selectPreset(preset)
-                    }
+                    onClick = if (audioEffectAvailable) {
+                        {
+                            haptics.click()
+                            viewModel.selectPreset(preset)
+                        }
+                    } else null
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
                         Text(
