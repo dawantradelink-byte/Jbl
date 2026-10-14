@@ -305,19 +305,20 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun toggleVolumeLimiter(enabled: Boolean) {
+        // Apply immediately so the next slider event cannot exceed the newly selected limit.
+        _settingsState.update { it.copy(volumeLimiterEnabled = enabled) }
+        if (enabled && _audioOutputState.value.volumePercent > _settingsState.value.maxSafeVolumePercent) {
+            setVolume(_settingsState.value.maxSafeVolumePercent)
+        }
         viewModelScope.launch {
             prefsRepo.setVolumeLimiter(enabled)
-            _settingsState.update { it.copy(volumeLimiterEnabled = enabled) }
-            if (enabled && _audioOutputState.value.volumePercent > _settingsState.value.maxSafeVolumePercent) {
-                setVolume(_settingsState.value.maxSafeVolumePercent)
-            }
         }
     }
 
     fun toggleHaptic(enabled: Boolean) {
+        _settingsState.update { it.copy(hapticFeedbackEnabled = enabled) }
         viewModelScope.launch {
             prefsRepo.setHapticsEnabled(enabled)
-            _settingsState.update { it.copy(hapticFeedbackEnabled = enabled) }
         }
     }
 
