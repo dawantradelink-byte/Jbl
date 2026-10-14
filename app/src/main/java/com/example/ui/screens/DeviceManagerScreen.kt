@@ -452,7 +452,7 @@ fun DeviceManagerScreen(
                             permissionLauncher.launch(missing.toTypedArray())
                         }
                     } else {
-                        viewModel.startDiscoveryScan()
+                        viewModel.refreshBluetoothDevices()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
