@@ -22,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.BluetoothConnected
-import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CellTower
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Equalizer
@@ -49,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.model.ConnectionStatus
 import com.example.model.EqualizerPreset
 import com.example.ui.components.AcousticSpeakerVisualizer
 import com.example.ui.components.GlassCard
@@ -86,13 +86,13 @@ fun HomeScreen(
             .padding(horizontal = 16.dp, vertical = 10.dp)
             .testTag("home_screen")
     ) {
-        // Top Header: BOOMBOX4MINI badge + 5.4 MULTI + Battery 84% + Profile Avatar
+        // Top Header: real Bluetooth status + system EQ status + profile avatar
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left: BOOMBOX4MINI pill + 5.4 MULTI
+            // Left: live Bluetooth connection state
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
@@ -106,7 +106,7 @@ fun HomeScreen(
                             modifier = Modifier
                                 .size(7.dp)
                                 .clip(CircleShape)
-                                .background(PrimaryMint)
+                                .background(if (speakerState.connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else TertiaryCrimsonRose)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -116,7 +116,7 @@ fun HomeScreen(
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp
                             ),
-                            color = PrimaryMint
+                            color = if (speakerState.connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else TertiaryCrimsonRose
                         )
                     }
                 }
@@ -146,30 +146,34 @@ fun HomeScreen(
                 }
             }
 
-            // Right: Battery 84% + Avatar Circle
+            // Right: actual Android output-EQ capability + Avatar Circle
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
                         .background(SurfaceContainerLowest.copy(alpha = 0.60f))
-                        .border(1.dp, SecondarySunsetContainer.copy(alpha = 0.30f), RoundedCornerShape(16.dp))
+                        .border(
+                            1.dp,
+                            (if (audioEffectAvailable) PrimaryMint else TertiaryCrimsonRose).copy(alpha = 0.30f),
+                            RoundedCornerShape(16.dp)
+                        )
                         .padding(horizontal = 9.dp, vertical = 4.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.Bolt,
-                            contentDescription = "Battery charge",
-                            tint = SecondarySunsetOrange,
+                            imageVector = Icons.Default.Equalizer,
+                            contentDescription = "Android system equalizer status",
+                            tint = if (audioEffectAvailable) PrimaryMint else TertiaryCrimsonRose,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "N/A",
+                            text = if (audioEffectAvailable) "EQ READY" else "EQ OFF",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             ),
-                            color = SecondarySunsetOrange
+                            color = if (audioEffectAvailable) PrimaryMint else TertiaryCrimsonRose
                         )
                     }
                 }
@@ -199,7 +203,6 @@ fun HomeScreen(
         AcousticSpeakerVisualizer(
             speakerName = speakerState.name,
             connectionStatus = speakerState.connectionStatus,
-            isPlaying = false,
             volumePercent = audioOutputState.volumePercent,
             audioEffectAvailable = audioEffectAvailable
         )
