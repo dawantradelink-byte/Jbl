@@ -239,7 +239,7 @@ fun HomeScreen(
 
         // Master Gain & Dynamic Limiter
         TactileVolumeSlider(
-            volumePercent = mediaState.volumePercent,
+            volumePercent = audioOutputState.volumePercent,
             isMuted = audioOutputState.isMuted,
             onVolumeChanged = { viewModel.setVolume(it) },
             onMuteToggled = { viewModel.toggleMute() }
