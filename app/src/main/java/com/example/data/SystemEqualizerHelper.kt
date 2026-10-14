@@ -22,7 +22,10 @@ class SystemEqualizerHelper {
         val targetFrequenciesHz = listOf(60, 250, 1000, 4000, 14000)
         try {
             val bandCount = eq.numberOfBands.toInt()
-            if (bandCount <= 0) return false
+            if (bandCount < targetFrequenciesHz.size) {
+                release()
+                return false
+            }
             val range = eq.bandLevelRange
             targetFrequenciesHz.forEachIndexed { targetIndex, frequencyHz ->
                 val targetMilliHz = frequencyHz * 1000
