@@ -79,8 +79,6 @@ fun HomeScreen(
     val mediaState by viewModel.mediaState.collectAsStateWithLifecycle()
     val equalizerState by viewModel.equalizerState.collectAsStateWithLifecycle()
 
-    var isPartyBoostLinked by remember { mutableStateOf(false) }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -112,7 +110,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "BOOMBOX4MINI",
+                            text = speakerState.name,
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
@@ -140,7 +138,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "5.4 MULTI",
+                            text = "BLUETOOTH AUDIO",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -166,7 +164,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "84%",
+                            text = "N/A",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
@@ -210,14 +208,34 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Floating Now Playing Glass Console (Waveform visualizer + gradient scrubber + tactile controls)
-        MediaPlaybackControls(
-            mediaState = mediaState,
-            onTogglePlayPause = { viewModel.togglePlayPause() },
-            onSkipNext = { viewModel.skipNextTrack() },
-            onSkipPrevious = { viewModel.skipPreviousTrack() },
-            onToggleEmptyState = { viewModel.toggleEmptyMediaState() }
-        )
+        // Honest media status: no fake track or playback controls without an active media session.
+        GlassCard(
+            modifier = Modifier.fillMaxWidth().testTag("media_session_status"),
+            surfaceAlpha = 0.60f
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Text(
+                    text = "MEDIA PLAYBACK",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    ),
+                    color = PrimaryMint
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "No media session connected",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Start audio in your preferred music app. This screen controls system volume and, when supported, Android output EQ. Track controls require a real media-session integration.",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(14.dp))
 
@@ -249,7 +267,7 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.width(5.dp))
                     Text(
-                        text = "HARDWARE PROFILE PRESET",
+                        text = "PHONE OUTPUT EQ PRESET",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
@@ -260,7 +278,7 @@ fun HomeScreen(
                 }
 
                 Text(
-                    text = "CUSTOM DSP 4.0",
+                    text = "ANDROID SYSTEM EQ",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
@@ -498,103 +516,6 @@ fun HomeScreen(
         }
 
         Spacer(modifier = Modifier.height(14.dp))
-
-        // PartyBoost Broadcast Banner Card
-        GlassCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("partyboost_banner"),
-            surfaceAlpha = 0.70f
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(PrimaryContainerOceanic.copy(alpha = 0.35f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CellTower,
-                            contentDescription = "PartyBoost Broadcast",
-                            tint = PrimaryMint,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "PartyBoost Multi-Link",
-                                style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(if (isPartyBoostLinked) SecondarySunsetOrange else PrimaryMint)
-                            )
-                        }
-                        Text(
-                            text = if (isPartyBoostLinked) "2 Portable rigs synchronized" else "Sync audio across 100+ portable rigs",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Tactile Multi-Link Pill CTA
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(if (isPartyBoostLinked) SecondarySunsetOrange else PrimaryMint)
-                        .shadow(12.dp, RoundedCornerShape(20.dp), ambientColor = PrimaryMint, spotColor = PrimaryMint)
-                        .clickable {
-                            haptics.snap()
-                            isPartyBoostLinked = !isPartyBoostLinked
-                        }
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
-                        .testTag("broadcast_link_button"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (isPartyBoostLinked) Icons.Default.Check else Icons.Default.AddLink,
-                            contentDescription = null,
-                            tint = if (isPartyBoostLinked) Color(0xFF492900) else PrimaryMintDark,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = if (isPartyBoostLinked) "LINKED (2)" else "LINK +",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
-                            ),
-                            color = if (isPartyBoostLinked) Color(0xFF492900) else PrimaryMintDark
-                        )
-                    }
-                }
-            }
-        }
 
         Spacer(modifier = Modifier.height(84.dp)) // padding for floating glass bottom nav
     }
