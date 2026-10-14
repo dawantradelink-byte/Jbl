@@ -51,9 +51,9 @@ fun GlassCard(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        StudioSurfaceElevated.copy(alpha = surfaceAlpha + 0.15f),
-                        StudioSurfaceElevated.copy(alpha = surfaceAlpha),
-                        Color(0xFF101314).copy(alpha = surfaceAlpha + 0.20f)
+                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = surfaceAlpha + 0.15f),
+                        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = surfaceAlpha),
+                        MaterialTheme.colorScheme.surface.copy(alpha = surfaceAlpha + 0.20f)
                     )
                 )
             )
