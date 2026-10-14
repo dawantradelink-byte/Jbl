@@ -11,7 +11,7 @@ import com.example.data.SystemEqualizerHelper
 import com.example.model.ConnectionStatus
 import com.example.model.EqualizerPreset
 import com.example.model.FrequencyBand
-import com.example.model.MediaPlaybackState
+import com.example.model.AudioOutputState
 import com.example.model.SpeakerDevice
 import com.example.model.SpeakerInput
 import com.example.model.StudioEqualizerState
@@ -52,13 +52,13 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
     )
     val speakerState: StateFlow<SpeakerDevice> = _speakerState.asStateFlow()
 
-    private val _mediaState = MutableStateFlow(
+    private val _audioOutputState = MutableStateFlow(
         MediaPlaybackState(
             volumePercent = calculateInitialVolumePercent(),
             isPlaying = false
         )
     )
-    val mediaState: StateFlow<MediaPlaybackState> = _mediaState.asStateFlow()
+    val audioOutputState: StateFlow<AudioOutputState> = _mediaState.asStateFlow()
     private var lastNonMutedVolumePercent: Int = _mediaState.value.volumePercent.coerceAtLeast(1)
 
     private val _equalizerState = MutableStateFlow(StudioEqualizerState())
@@ -96,19 +96,6 @@ class BoomboxViewModel(application: Application) : AndroidViewModel(application)
         val current = audioHelper.getStreamMusicVolume()
         val max = audioHelper.getMaxStreamMusicVolume().coerceAtLeast(1)
         return ((current.toFloat() / max.toFloat()) * 100).toInt().coerceIn(0, 100)
-    }
-
-    // Media transport is intentionally not simulated. It requires a real Android media-session controller.
-    fun togglePlayPause() {
-        showToastMessage("Media controls are not connected. Use your music app to play or pause audio.")
-    }
-
-    fun skipNextTrack() {
-        showToastMessage("Track skipping requires an active Android media session.")
-    }
-
-    fun skipPreviousTrack() {
-        showToastMessage("Track skipping requires an active Android media session.")
     }
 
     fun setVolume(newPercent: Int) {
