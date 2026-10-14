@@ -145,7 +145,7 @@ fun AcousticSpeakerVisualizer(
                             modifier = Modifier
                                 .size(7.dp)
                                 .clip(CircleShape)
-                                .background(PrimaryMint)
+                                .background(if (connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else TertiaryCrimsonRose)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -168,7 +168,7 @@ fun AcousticSpeakerVisualizer(
                     Icon(
                         imageVector = Icons.Default.GraphicEq,
                         contentDescription = "System audio output",
-                        tint = PrimaryMint,
+                        tint = if (connectionStatus == ConnectionStatus.CONNECTED) PrimaryMint else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(15.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
