@@ -28,3 +28,18 @@ Updated: 2026-10-14
 - No speaker-internal DSP, firmware update, battery telemetry, or physical input switching is claimed without a documented vendor protocol/API.
 - Media play/pause/skip controls are not implemented. Use the music app's own controls; this app handles Android system volume and supported phone-side EQ.
 - The app refreshes paired devices and reads A2DP status; it does not silently force Bluetooth connections.
+
+
+## Theme and EQ visualizer pass — 2026-10-14
+
+### Implemented on `fix/theme-eq-visualizer` (CI verification pending)
+- Fixed the theme application bug: the selected skin colours were animated but were not used by the Material color scheme. The selected accent and its surface tint now flow through Material controls, glass cards, the bottom navigation, volume controls, the speaker artwork, and the animated background. Skin switches remain saved through DataStore.
+- Reworked the Home status header into two clear, compact live status chips. Removed the oversized redundant Bluetooth label and non-functional profile-avatar decoration to prevent horizontal crowding.
+- Replaced the speaker illustration's play-triangle look with an equalizer mark, so artwork no longer suggests that tapping it starts playback.
+- Replaced the former media-placeholder panel with a classic moving 32-bar EQ visualizer and a response curve derived from the effective five-band EQ gains (including bass/treble offsets). Labels explicitly avoid claiming live audio FFT/microphone capture.
+- The narrow vertical control at the right edge of the screenshot is not drawn by the app's Compose screens; it is consistent with Android's temporary system volume overlay. The app's in-app master volume slider and +/-5 controls remain the actual interactive volume controls.
+- Preserved the looping background motion and reduced-motion preference.
+
+### Validation
+- Pull-request CI and APK build: pending.
+- No physical-phone interaction test is claimed from this environment.

@@ -123,7 +123,7 @@ fun TactileVolumeSlider(
                             else -> Icons.Default.VolumeUp
                         },
                         contentDescription = if (isMuted) "Unmute" else "Mute",
-                        tint = SecondarySunsetOrange,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -152,7 +152,7 @@ fun TactileVolumeSlider(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold
                             ),
-                            color = SecondarySunsetOrange
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
 
@@ -213,9 +213,9 @@ fun TactileVolumeSlider(
                             .background(
                                 Brush.horizontalGradient(
                                     colors = listOf(
-                                        PrimaryContainerOceanic,
-                                        SecondarySunsetOrange,
-                                        TertiaryCrimsonContainer
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.secondary
                                     )
                                 )
                             )
@@ -234,7 +234,7 @@ fun TactileVolumeSlider(
                         .clip(RoundedCornerShape(4.dp))
                         .background(Color(0xFFE2E2E3))
                         .border(1.dp, SurfaceContainerLowest, RoundedCornerShape(4.dp))
-                        .shadow(10.dp, RoundedCornerShape(4.dp), ambientColor = SecondarySunsetOrange, spotColor = SecondarySunsetOrange)
+                        .shadow(10.dp, RoundedCornerShape(4.dp), ambientColor = MaterialTheme.colorScheme.primary, spotColor = MaterialTheme.colorScheme.primary)
                         .pointerInput(totalWidthPx) {
                             detectDragGestures(
                                 onDragStart = { offset ->
@@ -291,7 +291,7 @@ fun TactileVolumeSlider(
                         modifier = Modifier
                             .size(5.dp)
                             .clip(CircleShape)
-                            .background(TertiaryCrimsonRose)
+                            .background(MaterialTheme.colorScheme.tertiary)
                     )
                     Spacer(modifier = Modifier.width(3.dp))
                     Text(
@@ -300,7 +300,7 @@ fun TactileVolumeSlider(
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
                         ),
-                        color = TertiaryCrimsonRose
+                        color = MaterialTheme.colorScheme.tertiary
                     )
                 }
             }
@@ -328,7 +328,7 @@ fun TactileVolumeSlider(
                     Icon(
                         imageVector = Icons.Default.VolumeDown,
                         contentDescription = "Decrease volume by 5 percent",
-                        tint = SecondarySunsetOrange,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -354,7 +354,7 @@ fun TactileVolumeSlider(
                     Icon(
                         imageVector = Icons.Default.VolumeUp,
                         contentDescription = "Increase volume by 5 percent",
-                        tint = SecondarySunsetOrange,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }

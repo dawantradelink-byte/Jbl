@@ -132,7 +132,7 @@ fun MainNavigationScaffold(
                             snackbarData = data,
                             containerColor = SurfaceContainerHigh,
                             contentColor = TextOnSurface,
-                            actionColor = PrimaryMint
+                            actionColor = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -153,7 +153,7 @@ fun MainNavigationScaffold(
                                 .fillMaxWidth()
                                 .height(64.dp)
                                 .clip(RoundedCornerShape(32.dp))
-                                .background(SurfaceContainerLow.copy(alpha = 0.88f))
+                                .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.88f))
                                 .border(1.dp, Color(0xFF333536).copy(alpha = 0.60f), RoundedCornerShape(32.dp))
                                 .shadow(24.dp, RoundedCornerShape(32.dp), spotColor = Color.Black)
                                 .padding(horizontal = 6.dp)
@@ -171,11 +171,11 @@ fun MainNavigationScaffold(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(24.dp))
                                             .background(
-                                                if (isSelected) PrimaryContainerOceanic.copy(alpha = 0.35f) else Color.Transparent
+                                                if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f) else Color.Transparent
                                             )
                                             .border(
                                                 1.dp,
-                                                if (isSelected) PrimaryMint.copy(alpha = 0.40f) else Color.Transparent,
+                                                if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.40f) else Color.Transparent,
                                                 RoundedCornerShape(24.dp)
                                             )
                                             .clickable {
@@ -195,7 +195,7 @@ fun MainNavigationScaffold(
                                             Icon(
                                                 imageVector = if (isSelected) destination.activeIcon else destination.inactiveIcon,
                                                 contentDescription = destination.title,
-                                                tint = if (isSelected) PrimaryMint else TextOnSurfaceVariant,
+                                                tint = if (isSelected) MaterialTheme.colorScheme.primary else TextOnSurfaceVariant,
                                                 modifier = Modifier.size(20.dp)
                                             )
                                             Spacer(modifier = Modifier.height(2.dp))
@@ -205,7 +205,7 @@ fun MainNavigationScaffold(
                                                     fontSize = 10.sp,
                                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                                 ),
-                                                color = if (isSelected) PrimaryMint else TextOnSurfaceVariant
+                                                color = if (isSelected) MaterialTheme.colorScheme.primary else TextOnSurfaceVariant
                                             )
                                         }
                                     }
