@@ -56,7 +56,7 @@ Updated: 2026-10-14
 
 ## Sound-reactive EQ styles — 2026-10-14
 
-### Implemented on `feature/live-audio-eq-styles` (CI pending)
+### Implemented and merged to `main`
 - Redesigned the blue-marked speaker hero with a compact, clearly non-interactive EQ emblem; added a swipeable six-style audio visualizer below it.
 - Visualizer styles: Spectrum Bars, Neon Wave, Circular Pulse, Mirror Peaks, Retro Scope, and Aurora Flow. Horizontal swipe cycles between styles and six position dots show the current style.
 - Added an opt-in `LIVE SOUND` control. It requests Android `RECORD_AUDIO` permission only when tapped, then attempts Android output-mix FFT capture via `android.media.audiofx.Visualizer` session 0. When the OEM/OS allows it, bar/wave levels follow captured FFT. If the device blocks global capture, the UI reports that and retains the EQ-shaped preview instead of pretending to be live.
@@ -64,7 +64,9 @@ Updated: 2026-10-14
 - Added cleanup for the Android Visualizer effect when the live mode is turned off or the screen is disposed.
 
 ### Validation
-- CI build and tests pending; no physical-device audio-capture test claimed.
+- Main-branch CI run [38546591771](https://github.com/dawantradelink-byte/Jbl/actions/runs/38546591771) passed unit tests, debug APK assembly, and artifact upload for commit `b2a1564ff46e3023a7a5945e7d18991bde04c9fb`.
+- APK artifact ID `11885320235`; ZIP SHA-256 `6358f7d637e0cd9f876236f33895d02d736b9e01150a457c58672fb5a6c9abda`; extracted APK SHA-256 `3d990bafc097bfcadb610294b12dbc4563a6566c51b0276ea160bb171db9aaf3`.
+- APK and artifact ZIP passed archive integrity checks. No physical-phone test or Android 16/17 emulator/device run was available here; output-mix capture remains OEM/OS-policy dependent.
 
 
 ## Speaker hero animation redesign — 2026-10-14
@@ -81,4 +83,4 @@ Updated: 2026-10-14
 - Increased the gesture cycle from five to six styles and updated the on-screen labels/instruction.
 - Effects are Canvas-based Compose animations and do not require a Motorola-specific API. They are intended to run on Android 16/17 as well as other supported Android versions, subject to normal device rendering performance.
 - These hero effects are ambient animation, not claims of live sound capture. Live output FFT remains a separate, opt-in visualizer feature.
-- CI verification for this latest commit is pending; no physical device test is claimed.
+- The main-branch commit containing the six hero animations passed CI in run [38546591771](https://github.com/dawantradelink-byte/Jbl/actions/runs/38546591771). No physical device test is claimed.
