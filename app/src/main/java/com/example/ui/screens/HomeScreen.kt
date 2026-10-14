@@ -213,7 +213,7 @@ fun HomeScreen(
         ) {
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 Text(
-                    text = "MEDIA PLAYBACK",
+                    text = "MEDIA CONTROLS",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
@@ -222,13 +222,13 @@ fun HomeScreen(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "No media session connected",
+                    text = "Use your music app",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Start audio in your preferred music app. This screen controls system volume and, when supported, Android output EQ. Track controls require a real media-session integration.",
+                    text = "Playback metadata and play/pause/skip are not integrated here. Use your music app for playback controls; this app independently controls Android system volume and supported phone-side EQ.",
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
