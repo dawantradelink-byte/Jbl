@@ -201,7 +201,8 @@ fun HomeScreen(
             speakerName = speakerState.name,
             connectionStatus = speakerState.connectionStatus,
             isPlaying = mediaState.isPlaying && mediaState.isMediaSessionActive,
-            volumePercent = mediaState.volumePercent
+            volumePercent = mediaState.volumePercent,
+            audioEffectAvailable = audioEffectAvailable
         )
 
         Spacer(modifier = Modifier.height(14.dp))
