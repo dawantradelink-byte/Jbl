@@ -50,19 +50,12 @@ class BluetoothManagerHelper(private val context: Context) {
 
     fun getPairedAudioDevices(): List<DiscoveredSpeaker> {
         if (!hasBluetoothConnectPermission() || bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
-            return listOf(
-                DiscoveredSpeaker("BOOMBOX4MINI", "00:1A:7D:DA:71:04", isPaired = true, isBoomboxTarget = true)
-            )
+            return emptyList()
         }
 
         return try {
             val bonded = bluetoothAdapter.bondedDevices ?: emptySet()
-            if (bonded.isEmpty()) {
-                listOf(
-                    DiscoveredSpeaker("BOOMBOX4MINI", "00:1A:7D:DA:71:04", isPaired = true, isBoomboxTarget = true)
-                )
-            } else {
-                bonded.map { device ->
+            bonded.map { device ->
                     val name = try {
                         device.name ?: "Unknown Bluetooth Audio"
                     } catch (_: SecurityException) {
@@ -77,11 +70,8 @@ class BluetoothManagerHelper(private val context: Context) {
                         isBoomboxTarget = isTarget
                     )
                 }
-            }
         } catch (_: SecurityException) {
-            listOf(
-                DiscoveredSpeaker("BOOMBOX4MINI", "00:1A:7D:DA:71:04", isPaired = true, isBoomboxTarget = true)
-            )
+            emptyList()
         }
     }
 }
