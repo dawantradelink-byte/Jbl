@@ -1,9 +1,7 @@
 package com.example.data
 
 import android.content.Context
-import android.media.AudioDeviceInfo
 import android.media.AudioManager
-import android.os.Build
 
 class AudioManagerHelper(private val context: Context) {
 
@@ -33,23 +31,6 @@ class AudioManagerHelper(private val context: Context) {
                 AudioManager.FLAG_SHOW_UI
             )
         } catch (_: Exception) {
-        }
-    }
-
-    fun isBluetoothAudioConnected(): Boolean {
-        return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val devices = audioManager?.getDevices(AudioManager.GET_DEVICES_OUTPUTS) ?: emptyArray()
-                devices.any {
-                    it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
-                            it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
-                }
-            } else {
-                @Suppress("DEPRECATION")
-                audioManager?.isBluetoothA2dpOn == true
-            }
-        } catch (e: Exception) {
-            false
         }
     }
 
