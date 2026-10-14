@@ -2,26 +2,27 @@
 
 Updated: 2026-10-14
 
-## Reliability pass
+## Real-functionality pass
 
-### Real behavior implemented
-- Bluetooth permissions are checked before requesting them. Already-granted permissions are not requested again.
-- Device list shows real Android paired-device data; fabricated fallback BOOMBOX4MINI entries were removed.
-- Connection status reads Android's A2DP profile state instead of being set to CONNECTED after a timer.
-- Bluetooth settings button opens the actual Android Bluetooth settings screen. Refresh status re-reads paired devices and the A2DP profile state.
-- Volume and mute controls change Android's actual music stream volume. Unmute restores the last non-zero volume level.
-- Equalizer presets and sliders call Android's system output Equalizer effect. The UI checks whether the effect is supported; controls are disabled and the UI reports UNAVAILABLE if the platform cannot apply it. This affects phone-side audio, not speaker-internal DSP.
-- Theme, motion, volume limiter, and haptics settings remain persisted with Android DataStore.
-- Removed fabricated battery percentage, fake media tracks/playback progression, fake PartyBoost multi-link state, and simulated speaker-input switching.
-- Kept the existing looping ambient gradient background and reduced-motion support.
+### Implemented
+- Bluetooth permission state is checked before requesting anything; already-granted permissions are not requested again.
+- Removed fabricated fallback devices and hard-coded MAC addresses. The list uses Android's real paired-device data.
+- Connection state comes from Android's A2DP profile state. The UI does not simulate a connection after a timer.
+- Bluetooth Settings opens the real Android Bluetooth settings page. Refresh re-reads paired devices and A2DP status.
+- Volume and mute control Android's actual music stream. Initial slider/mute state is read from Android, and unmute restores the last non-zero level.
+- Added a phone-side Android system Equalizer integration. Five-band controls are enabled only when the OS provides a usable five-band output effect. The UI labels it unavailable if applying a curve fails. This does not modify speaker-internal DSP.
+- Theme, motion, volume limiter, and haptics preferences continue to use Android DataStore.
+- Removed fabricated battery percentage, fake track titles and playback progression, simulated PartyBoost linking, simulated input switching, unused fake media transport component, and unverified Bluetooth 5.4 / codec / DSP / surround claims.
+- Only Bluetooth is listed as an input capability because that is the only input this integration can verify. Physical AUX/TF/USB mode changes are not simulated.
+- Preserved the looping animated background and reduced-motion support.
 
-### CI / validation
-- Added .github/workflows/android-build.yml to run unit tests and assemble a debug APK, then upload the APK as a workflow artifact.
-- Initial CI attempt exposed an Android SDK setup issue caused by requesting the obsolete tools package; workflow updated to install only platform-tools through the action and install platform/build packages with sdkmanager.
-- Current CI run: pending/in progress. Do not treat build/tests as passed until the GitHub Actions run completes successfully.
-- No physical-device test has been performed from this environment. A2DP status, Android output EQ support, permission flow, and actual audio behavior still need verification on the target phone.
+### Build and test status
+- Added GitHub Actions workflow at .github/workflows/android-build.yml to run unit tests, assemble a debug APK, and upload the APK artifact.
+- Fixed the CI Android SDK package selection after the first run identified a removed package and then an incorrect API 36.1 package identifier.
+- An earlier CI compile exposed stale startDiscoveryScan references. These references have been removed; the latest branch run must pass before this can be considered build-verified.
+- No physical-device test has been performed from this environment. Real A2DP reporting, phone-side EQ availability, permission behavior, and audible volume/EQ changes still need confirmation on the target phone.
 
-### Known limits, intentionally not faked
-- The app does not claim to control the speaker's internal DSP or physical AUX/TF/USB mode. Those features require a documented speaker-specific protocol/API or physical controls.
-- Media transport buttons were removed from the home UI until a real Android media-session integration is implemented. Use the music app's own play/pause/skip controls.
-- The app refreshes paired devices and reads A2DP connection state; it does not silently force a Bluetooth connection. Pair/connect/disconnect is handled by Android Bluetooth settings.
+### Intentional limitations
+- No speaker-internal DSP, firmware update, battery telemetry, or physical input switching is claimed without a documented vendor protocol/API.
+- Media play/pause/skip controls are not implemented. Use the music app's own controls; this app handles Android system volume and supported phone-side EQ.
+- The app refreshes paired devices and reads A2DP status; it does not silently force Bluetooth connections.
